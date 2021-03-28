@@ -1,0 +1,101 @@
+# - There are more possible ways to run this plugin
+# -   1. Use commands with local sequences
+# -   2. Use API with local sequences
+# -   3. Use API with the shared sequencer
+# -   4. Use private sequencers (no API needed)
+# -
+# - Furthermore you can register you own actions, available for all
+# - 
+# - If this is not enough customizing for you,
+# -   you can extend the the function of the sequencer
+# -   e.g. enhance the sequence syntax by extending the java config objects
+#
+# - Please see https://github.com/Kirastur/LibSequence/wiki for Documentation
+# - Contact us at https://discord.gg/MBJjqUHQHR for support
+
+
+# Limit the functionality of this plugin
+# 
+# - These parameters are only read at startup.
+# - They cannot be modified at runtime using the reload-command.
+startup:
+
+   # Allow commands for local sequences
+   #
+   # - Enable this to allow players, console, command-blocks etc.
+   # -   to start sequences using commands.
+   # - 
+   # - Player must have command permission and execute permission for the 
+   # -   specific sequence to be allowed to start them.
+   # - 
+   # - If set to false, the following commands are disabled:
+   # -     libsequence
+   # -
+   # - Even if false, sequences can be started by API (if controlAPI is enabled).
+   enableCommands: true
+  
+   # Allow API to start and cancel local sequences
+   #
+   # - If local sequences are started via API, no permission check is done.
+   # - if this option is disabled, local sequences can only be start using commands.
+   # - If both commands and API is disabled, the local sequences are not loaded anyway.
+   enableControlAPI: true
+
+   # Enable the API-access to the shared Sequencer,
+   #   so plugins have access to a shared pool of sequences.
+   #
+   # - If enabled this, you can use the buildin shared sequencer,
+   # -   so you do not need to setup a private sequencer in your plugin.
+   # - Sequences from other plugins can only be run if you have their SecurityToken.
+   # -
+   # - If all enableCommands, enableControlAPI and enableSequenceAPI are disabled
+   # -   the complete shared scheduler is not loaded anyway,
+   # -   so only private sequencers are possible.
+   enableSequencerAPI: true
+  
+   # - The LibSequencer is not designed to prohibit the use of private sequencers,
+   # -   so there is no config option to prevent this.
+   # -
+   # - But be aware:
+   # -   If you use private sequencers, you must provide all actions on your own.
+      
+commands:
+   # Enables command action
+   #
+   # - If set to false, the following actions are disabled:
+   # -      command
+   # - 
+   # - Using commands as part of a sequence is a security risk
+   # - because they are executed in the console context.
+   # - So we give you the option to disable them
+   enableCommandAction: true
+  
+sequences:
+
+   demo:
+      1:
+         action: broadcast
+         message: First notification
+         wait-after-action: 10
+
+      2:
+         action: broadcast
+         message: Second notification 10 Seconds later
+
+messages:
+   de_de:
+      MSG_UNKNOWN_OPTION: "Unbekannte Option. Rufe mit '/libsequence help' die möglichen Optionen auf"
+      MSG_UNKNOWN_SEQUENCE: "Unbekannte Sequence. Eine Liste der verfügbaren Sequences gibt es mit '/libsequence list'"
+      MSG_OPTION_NAME_MISSING: "Keine Option angegeben. '/libsequence help' listet Dir die möglichen Optionen auf"
+      MSG_SEQUENCE_NAME_MISSING: "Der Sequence-Name muß angegeben werden"
+      MSG_NO_OPTION_PERMISSION: "Du hast keine Berechtigung für diese Option"
+      MSG_NO_SEQUENCE_PERMISSION: "Du hast keine Berechtigung für diese Sequence"
+      MSG_TOO_MANY_PARAMETERS: "Zu viele Parameter"
+      MSG_NOT_RUNNING: "Keine laufenden Sequences gefunden"
+      MSG_OPTION_FORBIDDEN: "Du hast auf keine Optionen Rechte"
+      MSG_SEQUENCE_FORBIDDEN: "Du hast keinen Zugriff auf Sequences"
+
+      MSG_SEQUENCE_STARTED: "Die Sequence wurde gestartet"
+      MSG_SEQUENCE_CANCELLED: "Die Sequence wurde abgebrochen"
+      MSG_RELOAD: "Der Reload wurde abgeschlossen"
+      MSG_HELP: "Deine möglichen Optionen sind:"

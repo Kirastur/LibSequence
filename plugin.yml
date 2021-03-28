@@ -1,0 +1,48 @@
+name: LibSequence
+description: Run a set of actions after time
+version: 1.0
+authors: [Kirastur]
+website: https://github.com/Kirastur/LibSequence/wiki
+
+api-version: 1.16
+load: POSTWORLD
+main: de.polarwolf.libsequence.main.Main
+
+commands:
+  libsequence:
+    description: Manage sequences
+    permission: libsequence.command
+    usage: Syntax error! Use /<command> subcommand
+
+permissions:
+  libsequence.command.*:
+    description: Can command sequences
+    children:
+      libsequence.command: true
+      libsequence.command.start: true
+      libsequence.command.cancel: true
+      libsequence.command.list: true
+      libsequence.command.info: true
+      libsequence.command.reload: true
+  libsequence.command:
+    description: Can use the libsequence command
+    default: op
+  libsequence.command.start:
+    description: Can start a new sequences
+    default: op
+  libsequence.command.cancel:
+    description: Can cancel a running sequences
+    default: op
+  libsequence.command.list:
+    description: Can list all installed sequences
+    default: op
+  libsequence.command.info:
+    description: Can list all currently running sequences
+    default: op
+  libsequence.command.reload:
+    description: Can reload the sequences from config
+    default: op
+  libsequence.sequence.*:
+    description: Can access all sequences
+    default: op
+    
