@@ -27,7 +27,6 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	}
 	
 	// Overwrite this if you want to import the section config from another place than the config-file
-	@Override
 	public ConfigurationSection getConfigurationSection () {
 		ConfigurationSection sectionRoot = plugin.getConfig().getRoot();
 		if (!sectionRoot.contains (getSectionIdentifier(), true)) {
