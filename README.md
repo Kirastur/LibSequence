@@ -5,8 +5,8 @@ The Lib Sequence is a Minecraft plugin designed to run a sequence of actions wit
 # Documentation
 Please see the Github Wiki
 
-#Support
+# Support
 For support please contact us as discord https://discord.gg/MBJjqUHQHR
 
-#Homepage
+# Homepage
 https://www.spigotmc.org/resources/libsequence.90664/
