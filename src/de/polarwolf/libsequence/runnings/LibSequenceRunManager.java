@@ -12,6 +12,8 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import org.bukkit.command.CommandSender;
+
 import de.polarwolf.libsequence.actions.LibSequenceActionManager;
 import de.polarwolf.libsequence.actions.LibSequenceActionResult;
 import de.polarwolf.libsequence.callback.LibSequenceCallback;
@@ -52,7 +54,7 @@ public class LibSequenceRunManager {
 	// Start a sequence
 	// For authorization you must provide the authorization-token
 	// The new RunningSequence-Object is included in the Result-Object
-	public LibSequenceRunResult execute(LibSequenceCallback callback, @Nonnull LibSequenceConfigSequence configSequence, String securityToken) {
+	public LibSequenceRunResult execute(LibSequenceCallback callback, @Nonnull LibSequenceConfigSequence configSequence, String securityToken, CommandSender initiator) {
 		removeOldSequences();
 		LibSequenceConfigResult result = configSequence.checkSyntax();
 		if (result.hasError()) {
@@ -64,7 +66,7 @@ public class LibSequenceRunManager {
 		if (getNumberOfRunningSequences() > getMaxRunningSequences()) {
 			return new LibSequenceRunResult(null, configSequence.getSequenceName(), LSRERR_TOO_MANY, null);
 		}
-		LibSequenceRunningSequence runningSequence = new LibSequenceRunningSequence(callback, this, configSequence);
+		LibSequenceRunningSequence runningSequence = new LibSequenceRunningSequence(callback, this, configSequence, initiator);
 		sequences.add(runningSequence);
 		return new LibSequenceRunResult(runningSequence, configSequence.getSequenceName(), LSRERR_OK, null);
 	}

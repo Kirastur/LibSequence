@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import de.polarwolf.libsequence.callback.LibSequenceCallback;
@@ -35,8 +36,8 @@ public final class LibSequenceController {
  		return player.hasPermission(permissionName);
  	}
  	
- 	public LibSequenceRunResult execute(String sequencerName) {
- 		return sequencer.executeOwnSequence(callback, sequencerName);
+ 	public LibSequenceRunResult execute(String sequencerName, CommandSender initiator) {
+ 		return sequencer.executeOwnSequence(callback, sequencerName, initiator);
  	}
  	
  	public LibSequenceRunResult cancel(String sequenceName) {

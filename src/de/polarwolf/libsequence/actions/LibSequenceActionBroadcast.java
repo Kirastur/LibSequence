@@ -22,7 +22,7 @@ public class LibSequenceActionBroadcast extends LibSequenceActionGeneric {
     public LibSequenceActionResult checkSyntax(LibSequenceConfigStep configStep) {
     	String message=configStep.getMessage();
     	if (message==null) {
-    		return new LibSequenceActionResult(null, LSAERR_MISSING_MESSAGE, null);
+    		return new LibSequenceActionResult(configStep.getActionName(), LSAERR_MISSING_MESSAGE, null);
     	}
     	return new LibSequenceActionResult(null, LSAERR_OK, null);
     }

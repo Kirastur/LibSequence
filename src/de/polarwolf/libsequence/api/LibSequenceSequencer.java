@@ -4,6 +4,8 @@ import static de.polarwolf.libsequence.runnings.LibSequenceRunErrors.*;
 
 import java.util.Set;
 
+import org.bukkit.command.CommandSender;
+
 import de.polarwolf.libsequence.actions.LibSequenceAction;
 import de.polarwolf.libsequence.actions.LibSequenceActionManager;
 import de.polarwolf.libsequence.actions.LibSequenceActionResult;
@@ -38,21 +40,21 @@ public class LibSequenceSequencer {
 	}
 	
 	// RunManager Interface
-	public LibSequenceRunResult executeForeignSequence(LibSequenceCallback callback, String securityToken) {
+	public LibSequenceRunResult executeForeignSequence(LibSequenceCallback callback, String securityToken, CommandSender initiator) {
 		LibSequenceConfigSequence sequence = configManager.findForeignSequence(securityToken);
 		if (sequence==null) {
 			return new LibSequenceRunResult(null, null, LSRERR_NOT_FOUND, null);
 		}
-		return runManager.execute(callback, sequence, securityToken);
+		return runManager.execute(callback, sequence, securityToken, initiator);
 	}
 	
-	public LibSequenceRunResult executeOwnSequence(LibSequenceCallback callback, String sequenceName) {
+	public LibSequenceRunResult executeOwnSequence(LibSequenceCallback callback, String sequenceName, CommandSender initiator) {
 		LibSequenceConfigSequence sequence = configManager.findOwnSequence(callback, sequenceName);
 		if (sequence==null) {
 			return new LibSequenceRunResult(null, sequenceName, LSRERR_NOT_FOUND, null);
 		}
 		String securityToken = sequence.getSecurityToken(callback);
-		return runManager.execute(callback, sequence, securityToken);
+		return runManager.execute(callback, sequence, securityToken, initiator);
 	}
 
 	public LibSequenceRunResult cancelSequence(LibSequenceRunningSequence runningSequence) {

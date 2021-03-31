@@ -1,5 +1,7 @@
 package de.polarwolf.libsequence.runnings;
 
+import org.bukkit.command.CommandSender;
+
 // The tree is: RunManager ==> RunningSequence
 //
 // A RunningSequence is a sequence which is currently executed
@@ -16,6 +18,7 @@ public class LibSequenceRunningSequence {
 	protected final LibSequenceCallback callback;
 	protected final LibSequenceRunManager runManager;
 	protected final LibSequenceConfigSequence configSequence;
+	protected final CommandSender initiator;
 	
 	protected Boolean bCancel = false;
 	protected Boolean bFinish = false;
@@ -23,10 +26,11 @@ public class LibSequenceRunningSequence {
 
 	protected BukkitTask currentTask = null;
 
-	public LibSequenceRunningSequence(LibSequenceCallback callback, LibSequenceRunManager runManager, LibSequenceConfigSequence configSequence) {
+	public LibSequenceRunningSequence(LibSequenceCallback callback, LibSequenceRunManager runManager, LibSequenceConfigSequence configSequence, CommandSender initiator) {
 		this.callback=callback;
 		this.runManager=runManager;
 		this.configSequence=configSequence;
+		this.initiator=initiator;
 		runManager.onInit(this);
 		currentTask = createScheduledTask(1);
 		callback.debugSequenceStarted(this);
@@ -48,6 +52,10 @@ public class LibSequenceRunningSequence {
 		return configSequence.getSequenceName();
 	}
 	
+	public CommandSender getInitiator() {
+		return initiator;
+	}
+
 	protected BukkitTask createScheduledTask(Integer wait) {
 		SingleStepTask task = new SingleStepTask(this);
 		return callback.scheduleTask(task, wait);

@@ -174,7 +174,7 @@ public class LibSequenceCommand implements CommandExecutor {
 			printMessage(sender, MSG_NO_SEQUENCE_PERMISSION, null);
 			return;
 		}
-		LibSequenceRunResult result = controller.execute(sequenceName);
+		LibSequenceRunResult result = controller.execute(sequenceName, sender);
 		if (result.hasError()) {
 			sender.sendMessage(result.toString());
 			return;
