@@ -20,10 +20,9 @@ import de.polarwolf.libsequence.actions.LibSequenceActionValidator;
 
 public class LibSequenceConfigStep {
 
-	// The three important keys in a step are hard-coded here
+	// The two important keys in a step are hard-coded here
 	public static final String KEYNAME_WAIT = "wait-after-action";
 	public static final String KEYNAME_ACTION = "action";
-	public static final String KEYNAME_MESSAGE = "message";
 	
 	// Please use the public getter for this
 	// Perhaps someone wants to override it
@@ -47,7 +46,7 @@ public class LibSequenceConfigStep {
 		keyWithSyntaxError=loadStepFromConfig(config);
 	}
 	
-	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, Integer stepNr, @Nonnull Map<String, String> config) {
+	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, Integer stepNr, @Nonnull Map<String,String> config) {
 		this.actionValidator=actionValidator;
 		this.sequenceName=sequenceName;
 		this.stepNr=stepNr;
@@ -67,7 +66,7 @@ public class LibSequenceConfigStep {
 		return null;
 	}
 	
-	protected String loadStepFromMap(Map<String, String> config) {
+	protected String loadStepFromMap(Map<String,String> config) {
 		for (Entry<String,String> entry : config.entrySet()) { 
 			String name = entry.getKey();
 			String value = entry.getValue();
@@ -113,23 +112,15 @@ public class LibSequenceConfigStep {
 		return getValue(KEYNAME_ACTION);
 	}
 
-	// The message line is used my many actions, so we define an extra getter here
-	public String getMessage() {
-		return getValue(KEYNAME_MESSAGE);
-	}
-	
 	// The syntax check is called during initial section load and before every run
 	// An invalid sequence is not runnable
 	// A Sequence is immutable (it cannot be changed after load, except explicit section unload/reload)
 	public LibSequenceConfigResult checkSyntax() {
-		if (keyWithSyntaxError!=null) {		
+		if ((keyWithSyntaxError!=null) && (!keyWithSyntaxError.isEmpty())) {		
 			return new LibSequenceConfigResult(getSequenceName(), getStepNr(), LSCERR_KEY_SYNTAX_ERROR, keyWithSyntaxError, null);
 		}
 		String actionName = getActionName();
-		if (actionName==null) {
-			return new LibSequenceConfigResult(getSequenceName(), getStepNr(), LSCERR_MISSING_ACTION, null, null);
-		}
-		if (actionName.length()==0) {
+		if ((actionName==null) || actionName.isEmpty()) {
 			return new LibSequenceConfigResult(getSequenceName(), getStepNr(), LSCERR_MISSING_ACTION, null, null);
 		}
 		String wait = getValue(KEYNAME_WAIT);

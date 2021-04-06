@@ -1,12 +1,13 @@
 name: LibSequence
 description: Run a set of actions after time
-version: 1.1
+version: 1.2
 authors: [Kirastur]
-website: https://www.spigotmc.org/resources/libsequence.90664/
+website: https://www.spigotmc.org/resources/libsequence.90664
 
 api-version: 1.16
 load: POSTWORLD
 main: de.polarwolf.libsequence.main.Main
+softdepend: [PlaceholderAPI]
 
 commands:
   libsequence:

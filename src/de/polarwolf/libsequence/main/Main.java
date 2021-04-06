@@ -4,7 +4,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import de.polarwolf.libsequence.actions.LibSequenceActionBroadcast;
 import de.polarwolf.libsequence.actions.LibSequenceActionCommand;
+import de.polarwolf.libsequence.actions.LibSequenceActionInfo;
+import de.polarwolf.libsequence.actions.LibSequenceActionNotify;
 import de.polarwolf.libsequence.actions.LibSequenceActionResult;
+import de.polarwolf.libsequence.actions.LibSequenceActionTitle;
 import de.polarwolf.libsequence.api.LibSequenceAPI;
 import de.polarwolf.libsequence.api.LibSequenceController;
 import de.polarwolf.libsequence.api.LibSequenceSequencer;
@@ -17,9 +20,38 @@ import de.polarwolf.libsequence.config.LibSequenceConfigResult;
 
 public final class Main extends JavaPlugin {
 	
+	protected void registerDefaultActions(LibSequenceSequencer sequencer, boolean includeCommand) {
+		LibSequenceActionResult actionResultBroadcast = sequencer.registerAction("broadcast", new LibSequenceActionBroadcast(this));
+		if (actionResultBroadcast.hasError()) {
+			getLogger().warning(actionResultBroadcast.toString());
+		}
+		
+		LibSequenceActionResult actionResultInfo = sequencer.registerAction("info", new LibSequenceActionInfo(this));
+		if (actionResultInfo.hasError()) {
+			getLogger().warning(actionResultInfo.toString());
+		}
+
+		LibSequenceActionResult actionResultNotify = sequencer.registerAction("notify", new LibSequenceActionNotify(this));
+		if (actionResultNotify.hasError()) {
+			getLogger().warning(actionResultNotify.toString());
+		}
+
+		LibSequenceActionResult actionResultTitle = sequencer.registerAction("title", new LibSequenceActionTitle(this));
+		if (actionResultTitle.hasError()) {
+			getLogger().warning(actionResultTitle.toString());
+		}
+
+		if (includeCommand) {
+			LibSequenceActionResult actionResultCommand = sequencer.registerAction("command", new LibSequenceActionCommand(this));
+			if (actionResultCommand.hasError()) {
+				getLogger().warning(actionResultCommand.toString());
+			}
+		}
+	}
+	
 	@Override
 	public void onEnable() {
-
+		
 		// Copy config from .jar if it dosn't exists
 		saveDefaultConfig();
 		
@@ -39,21 +71,11 @@ public final class Main extends JavaPlugin {
 		LibSequenceCallback callback = new LibSequenceCallbackGeneric(this);
 		
 		// Startup engine
-		LibSequenceSequencer sequencer = new LibSequenceSequencer();
+		LibSequenceSequencer sequencer = new LibSequenceSequencer(this);
 		LibSequenceController controller = new LibSequenceController(sequencer, callback);
 		
-		// Register actions
-		LibSequenceActionResult actionResultBroadcast = sequencer.registerAction("broadcast", new LibSequenceActionBroadcast(this));
-		if (actionResultBroadcast.hasError()) {
-			getLogger().warning(actionResultBroadcast.toString());
-		}
-		
-		if (commandsEnableCommandAction) {
-			LibSequenceActionResult actionResultCommand = sequencer.registerAction("command", new LibSequenceActionCommand(this));
-			if (actionResultCommand.hasError()) {
-				getLogger().warning(actionResultCommand.toString());
-			}
-		}
+		// Register default (out-of-the-box) actions
+		registerDefaultActions(sequencer, commandsEnableCommandAction);
 
 		// Load sequences from config
 		LibSequenceConfigResult configResult = sequencer.addSection(callback);
@@ -61,7 +83,7 @@ public final class Main extends JavaPlugin {
 			getLogger().warning(configResult.toString());
 		}
 
-		// Register commands
+		// Register minecraft commands
 		if (startupEnableCommands) {
 			LibSequenceCommand command = new LibSequenceCommand(this, controller);
 			getCommand("libsequence").setExecutor(command);			

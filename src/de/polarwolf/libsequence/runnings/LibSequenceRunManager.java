@@ -21,6 +21,7 @@ import de.polarwolf.libsequence.config.LibSequenceConfigManager;
 import de.polarwolf.libsequence.config.LibSequenceConfigResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigSequence;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
+import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderManager;
 
 import static de.polarwolf.libsequence.runnings.LibSequenceRunErrors.*;
 
@@ -30,11 +31,13 @@ public class LibSequenceRunManager {
 
 	protected final LibSequenceActionManager actionManager;
 	protected final LibSequenceConfigManager configManager;
+	protected final LibSequencePlaceholderManager placeholderManager;
 	protected final Set<LibSequenceRunningSequence> sequences = new HashSet<>();
 	
-	public LibSequenceRunManager(LibSequenceActionManager actionManager, LibSequenceConfigManager configManager) {
+	public LibSequenceRunManager(LibSequenceActionManager actionManager, LibSequenceConfigManager configManager, LibSequencePlaceholderManager placeholderManager) {
 		this.actionManager = actionManager;
 		this.configManager = configManager;
+		this.placeholderManager = placeholderManager;
 	}
 	
 	public Integer getMaxRunningSequences() {
@@ -51,10 +54,24 @@ public class LibSequenceRunManager {
 		return i;
 	}
 	
+	public boolean isRunning(LibSequenceConfigSequence configSequence) {
+		for (LibSequenceRunningSequence sequence : sequences) {
+			if ((sequence.configSequence==configSequence) && (!sequence.isFinished())) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public String resolvePlaceholder(String messageText, LibSequenceRunOptions runOptions) {
+		return placeholderManager.resolvePlaceholder(messageText, runOptions);
+	}
+	
+	
 	// Start a sequence
 	// For authorization you must provide the authorization-token
 	// The new RunningSequence-Object is included in the Result-Object
-	public LibSequenceRunResult execute(LibSequenceCallback callback, @Nonnull LibSequenceConfigSequence configSequence, String securityToken, CommandSender initiator) {
+	public LibSequenceRunResult execute(LibSequenceCallback callback, @Nonnull LibSequenceConfigSequence configSequence, String securityToken, LibSequenceRunOptions runOptions) {
 		removeOldSequences();
 		LibSequenceConfigResult result = configSequence.checkSyntax();
 		if (result.hasError()) {
@@ -66,18 +83,33 @@ public class LibSequenceRunManager {
 		if (getNumberOfRunningSequences() > getMaxRunningSequences()) {
 			return new LibSequenceRunResult(null, configSequence.getSequenceName(), LSRERR_TOO_MANY, null);
 		}
-		LibSequenceRunningSequence runningSequence = new LibSequenceRunningSequence(callback, this, configSequence, initiator);
+		LibSequenceActionResult actionResult = actionManager.checkAuthorization(runOptions, configSequence);
+		if (actionResult.hasError()) {
+			return new LibSequenceRunResult(null, configSequence.getSequenceName(), LSRERR_ACTION_AUTH_FAILED, null);
+		}
+		if (runOptions.isSingleton() && isRunning(configSequence)) {
+			return new LibSequenceRunResult(null, configSequence.getSequenceName(), LSRERR_SINGLETON_RUNNING, null);
+		}
+		LibSequenceRunningSequence runningSequence = new LibSequenceRunningSequence(callback, this, configSequence, runOptions);
 		sequences.add(runningSequence);
 		return new LibSequenceRunResult(runningSequence, configSequence.getSequenceName(), LSRERR_OK, null);
 	}
 
+	@Deprecated
+	public LibSequenceRunResult execute(LibSequenceCallback callback, @Nonnull LibSequenceConfigSequence configSequence, String securityToken, CommandSender initiator) {
+		LibSequenceRunOptions runOptions = new LibSequenceRunOptions();
+		runOptions.setInitiator(initiator);
+		return execute (callback, configSequence, securityToken, runOptions);	
+	}
+	
+	
 	// Cancel a running sequence
 	public LibSequenceRunResult cancel(LibSequenceRunningSequence runningSequence) {
-		if (!(sequences.contains(runningSequence))) {
+		if ((runningSequence.isFinished()) || (!sequences.contains(runningSequence))) {
 			return new LibSequenceRunResult(null, null, LSRERR_NOT_RUNNING, null);
 		}
 		runningSequence.cancel();
-		return new LibSequenceRunResult(null, runningSequence.getName(), LSRERR_OK, null);
+		return new LibSequenceRunResult(runningSequence, runningSequence.getName(), LSRERR_OK, null);
 	}
 	
 	// Cancel all running sequences with a given name
@@ -87,6 +119,7 @@ public class LibSequenceRunManager {
 		for (LibSequenceRunningSequence runningSequence : sequences) {
 			if ((runningSequence.getName().equalsIgnoreCase(sequenceName)) && 
 				(runningSequence.configSequence.verifyAccess(callback)) &&
+				(!runningSequence.isFinished()) && 
 				(!cancel(runningSequence).hasError())) {
 				i = i +1;
 			}

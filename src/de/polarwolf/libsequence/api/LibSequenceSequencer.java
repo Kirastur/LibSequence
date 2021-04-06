@@ -5,6 +5,7 @@ import static de.polarwolf.libsequence.runnings.LibSequenceRunErrors.*;
 import java.util.Set;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.Plugin;
 
 import de.polarwolf.libsequence.actions.LibSequenceAction;
 import de.polarwolf.libsequence.actions.LibSequenceActionManager;
@@ -14,19 +15,27 @@ import de.polarwolf.libsequence.callback.LibSequenceCallback;
 import de.polarwolf.libsequence.config.LibSequenceConfigManager;
 import de.polarwolf.libsequence.config.LibSequenceConfigResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigSequence;
+import de.polarwolf.libsequence.placeholders.LibSequencePlaceholder;
+import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderAPI;
+import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderInternal;
+import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderManager;
 import de.polarwolf.libsequence.runnings.LibSequenceRunManager;
+import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
 import de.polarwolf.libsequence.runnings.LibSequenceRunResult;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public class LibSequenceSequencer {
 
-	protected final LibSequenceConfigManager configManager;
 	protected final LibSequenceActionManager actionManager;
+	protected final LibSequenceConfigManager configManager;
+	protected final LibSequencePlaceholderManager placeholderManager;
 	protected final LibSequenceRunManager runManager;
 	
-	public LibSequenceSequencer() {
+	public LibSequenceSequencer(Plugin plugin) {
 		actionManager = createActionManager();
 		configManager = createConfigManager();
+		placeholderManager = createPlaceholderManager();
+		registerPredefinedPlaceholders(plugin);
 		runManager = createRunManager();
 	}
 	
@@ -40,23 +49,40 @@ public class LibSequenceSequencer {
 	}
 	
 	// RunManager Interface
-	public LibSequenceRunResult executeForeignSequence(LibSequenceCallback callback, String securityToken, CommandSender initiator) {
+	public LibSequenceRunResult executeForeignSequence(LibSequenceCallback callback, String securityToken, LibSequenceRunOptions runOptions) {
 		LibSequenceConfigSequence sequence = configManager.findForeignSequence(securityToken);
 		if (sequence==null) {
 			return new LibSequenceRunResult(null, null, LSRERR_NOT_FOUND, null);
 		}
-		return runManager.execute(callback, sequence, securityToken, initiator);
+		if (runOptions == null) {
+			runOptions = new LibSequenceRunOptions();
+		}
+		return runManager.execute(callback, sequence, securityToken, runOptions);
 	}
 	
-	public LibSequenceRunResult executeOwnSequence(LibSequenceCallback callback, String sequenceName, CommandSender initiator) {
+	@Deprecated
+	public LibSequenceRunResult executeForeignSequence(LibSequenceCallback callback, String securityToken, CommandSender initiator) {
+		LibSequenceRunOptions runOptions = new LibSequenceRunOptions();
+		runOptions.setInitiator(initiator);
+		return executeForeignSequence(callback, securityToken, runOptions);
+	}
+
+	public LibSequenceRunResult executeOwnSequence(LibSequenceCallback callback, String sequenceName, LibSequenceRunOptions runOptions) {
 		LibSequenceConfigSequence sequence = configManager.findOwnSequence(callback, sequenceName);
 		if (sequence==null) {
 			return new LibSequenceRunResult(null, sequenceName, LSRERR_NOT_FOUND, null);
 		}
 		String securityToken = sequence.getSecurityToken(callback);
-		return runManager.execute(callback, sequence, securityToken, initiator);
+		return runManager.execute(callback, sequence, securityToken, runOptions);
 	}
 
+	@Deprecated
+	public LibSequenceRunResult executeOwnSequence(LibSequenceCallback callback, String sequenceName, CommandSender initiator) {
+		LibSequenceRunOptions runOptions = new LibSequenceRunOptions();
+		runOptions.setInitiator(initiator);
+		return executeOwnSequence(callback, sequenceName, runOptions);
+	}
+	
 	public LibSequenceRunResult cancelSequence(LibSequenceRunningSequence runningSequence) {
 		return runManager.cancel(runningSequence);
 	}
@@ -84,21 +110,36 @@ public class LibSequenceSequencer {
 	
 	public String getSecurityToken (LibSequenceCallback callback, String sequenceName) {
 		LibSequenceConfigSequence sequence = configManager.findOwnSequence(callback, sequenceName);
-		return sequence.getSecurityToken(callback);
+		if (sequence != null) {
+			return sequence.getSecurityToken(callback);
+		}
+		return null;
 	}
 	
 	public Boolean hasForeignSequence(String securityToken) {
 		LibSequenceConfigSequence sequence = configManager.findForeignSequence(securityToken);
-			return (sequence!=null);
+		return (sequence!=null);
 	}
 	
 	public Boolean hasOwnSequence(LibSequenceCallback callback, String sequenceName) {
 		LibSequenceConfigSequence sequence = configManager.findOwnSequence(callback, sequenceName);
-			return (sequence!=null);
+		return (sequence!=null);
 	}
 	
 	public Set<String> getSequenceNames(LibSequenceCallback callback) {
 		return configManager.getSequenceNames (callback);
+	}
+	
+	// PlaceholderManager
+	public void registerPlaceholder(LibSequencePlaceholder placeholder) {
+		placeholderManager.registerPlaceholder(placeholder);
+	}
+	
+	protected void registerPredefinedPlaceholders(Plugin plugin) {
+		placeholderManager.registerPlaceholder(new LibSequencePlaceholderInternal());
+		if (plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+			placeholderManager.registerPlaceholder(new LibSequencePlaceholderAPI());
+		}
 	}
 	
 	// Initialization
@@ -110,9 +151,13 @@ public class LibSequenceSequencer {
 	protected LibSequenceConfigManager createConfigManager() {
 		return new LibSequenceConfigManager(getActionValidator());
 	}
-	
+
+	protected LibSequencePlaceholderManager createPlaceholderManager() {
+		return new LibSequencePlaceholderManager();
+	}
+
 	protected LibSequenceRunManager createRunManager() {
-		return new LibSequenceRunManager (actionManager, configManager);
+		return new LibSequenceRunManager (actionManager, configManager, placeholderManager);
 	}
 
 }

@@ -54,7 +54,6 @@ public class LibSequenceConfigSequence {
 	}
 
 	protected Boolean loadStepsFromConfig(ConfigurationSection config) {
-		Integer sizeBefore=getSize();
 		Integer i = 1;
 		while(config.contains(i.toString(), true)) {
 			ConfigurationSection subConfig = config.getConfigurationSection(i.toString());
@@ -64,19 +63,20 @@ public class LibSequenceConfigSequence {
 			steps.add(new LibSequenceConfigStep(actionValidator, getSequenceName(), getSize()+1, subConfig));
 			i = i +1;
 		}
-		return (getSize()==(sizeBefore+i-1));
+		return (getSize()==(i-1));
 	}
 
 	protected Boolean loadStepsFromList(List<Map<String,String>> config) {
-		for (Map<String,String> stepTouple : config) {
-			if (stepTouple==null) {
+		for (Map<String,String> stepTouples : config) {
+			if (stepTouples==null) {
 				return false;
 			}
-			steps.add(new LibSequenceConfigStep(actionValidator, getSequenceName(), getSize()+1, stepTouple));			
+			steps.add(new LibSequenceConfigStep(actionValidator, getSequenceName(), getSize()+1, stepTouples));			
 		}
 		return true;
 	}
 	
+	// This method is final, so no one can override this to steal a foreign callback-object
 	public final boolean verifyAccess(LibSequenceCallback callbackToCheck) {
 		return callbackToCheck==callback;
 	}
@@ -94,7 +94,7 @@ public class LibSequenceConfigSequence {
 	
 	// Even it the security token is not known by others, 
 	// every plugin can verify if it has the correct one for this sequence
-	// This method is final, so no one can override this to steal the token
+	// This method is final, so no one can override this to steal a foreign token
 	// This is needed because we have a loop which cycles through all sequences to find the sequence fitting to a given token
 	public final Boolean verifySecurityToken(String tokenToCheck) {
 		return securityToken.equals(tokenToCheck);

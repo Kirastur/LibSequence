@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 
 import de.polarwolf.libsequence.callback.LibSequenceCallback;
 import de.polarwolf.libsequence.config.LibSequenceConfigResult;
+import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
 import de.polarwolf.libsequence.runnings.LibSequenceRunResult;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
@@ -36,8 +37,15 @@ public final class LibSequenceController {
  		return player.hasPermission(permissionName);
  	}
  	
- 	public LibSequenceRunResult execute(String sequencerName, CommandSender initiator) {
- 		return sequencer.executeOwnSequence(callback, sequencerName, initiator);
+ 	public LibSequenceRunResult execute(String sequenceName, LibSequenceRunOptions runOptions) {
+ 		return sequencer.executeOwnSequence(callback, sequenceName, runOptions);
+ 	}
+ 	
+ 	@Deprecated
+ 	public LibSequenceRunResult execute(String sequenceName, CommandSender initiator) {
+ 		LibSequenceRunOptions runOptions = new LibSequenceRunOptions();
+ 		runOptions.setInitiator(initiator);
+ 		return sequencer.executeOwnSequence(callback, sequenceName, runOptions);
  	}
  	
  	public LibSequenceRunResult cancel(String sequenceName) {

@@ -1,6 +1,6 @@
 package de.polarwolf.libsequence.runnings;
 
-import org.bukkit.command.CommandSender;
+import javax.annotation.Nonnull;
 
 // The tree is: RunManager ==> RunningSequence
 //
@@ -15,23 +15,28 @@ import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 
 public class LibSequenceRunningSequence {
 
+	private final LibSequenceRunManager runManager;
+	
 	protected final LibSequenceCallback callback;
-	protected final LibSequenceRunManager runManager;
 	protected final LibSequenceConfigSequence configSequence;
-	protected final CommandSender initiator;
+	protected final LibSequenceRunOptions runOptions;
 	
 	protected Boolean bCancel = false;
 	protected Boolean bFinish = false;
 	protected Integer step = 0;
 
 	protected BukkitTask currentTask = null;
+	
+	// Be careful with RunManager here
+	// Don't use section-based calls
+	// You can't rely that the sections does still exists during execution
 
-	public LibSequenceRunningSequence(LibSequenceCallback callback, LibSequenceRunManager runManager, LibSequenceConfigSequence configSequence, CommandSender initiator) {
+	public LibSequenceRunningSequence(LibSequenceCallback callback, LibSequenceRunManager runManager, LibSequenceConfigSequence configSequence, @Nonnull LibSequenceRunOptions runOptions) {
 		this.callback=callback;
 		this.runManager=runManager;
 		this.configSequence=configSequence;
-		this.initiator=initiator;
-		runManager.onInit(this);
+		this.runOptions=runOptions;
+		runManagerOnInit();
 		currentTask = createScheduledTask(1);
 		callback.debugSequenceStarted(this);
 	}
@@ -52,11 +57,30 @@ public class LibSequenceRunningSequence {
 		return configSequence.getSequenceName();
 	}
 	
-	public CommandSender getInitiator() {
-		return initiator;
+	public LibSequenceRunOptions getRunOptions() {
+		return runOptions;
+	}
+	
+	public String resolvePlaceholder(String messageText) {
+		return runManager.resolvePlaceholder(messageText, runOptions);
+	}
+	
+	protected LibSequenceActionResult executeStep(LibSequenceConfigStep configStep) {
+		return runManager.doExecute(this, configStep);
+	}
+	
+	protected void runManagerOnInit() {
+		runManager.onInit(this);	
+	}
+	
+	protected void runManagerOnCancel() {
+		runManager.onCancel(this);	
 	}
 
-	protected BukkitTask createScheduledTask(Integer wait) {
+	protected void runManagerOnFinish() {
+		runManager.onFinish(this);	
+	}
+ 	protected BukkitTask createScheduledTask(Integer wait) {
 		SingleStepTask task = new SingleStepTask(this);
 		return callback.scheduleTask(task, wait);
 	}
@@ -82,7 +106,7 @@ public class LibSequenceRunningSequence {
 			if (step <= configSequence.getSize()) {
 				LibSequenceConfigStep configStep = configSequence.getStep(step);
 				callback.debugSequenceStepReached(this, configStep);
-				LibSequenceActionResult result = runManager.doExecute(this, configStep);
+				LibSequenceActionResult result = executeStep(configStep);
 				if (result.hasError()) {
 					callback.onExecutionError(this, result);
 				}
@@ -105,10 +129,10 @@ public class LibSequenceRunningSequence {
 		}
 		bFinish=true;
 		if (bCancel) {
-			runManager.onCancel(this);
+			runManagerOnCancel();
 			callback.debugSequenceCancelled(this);
 		} else {
-			runManager.onFinish(this);
+			runManagerOnFinish();
 			callback.debugSequenceFinished(this);
 		}	
 	}

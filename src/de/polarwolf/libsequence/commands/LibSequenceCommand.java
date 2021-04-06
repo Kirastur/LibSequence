@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import de.polarwolf.libsequence.api.LibSequenceController;
 import de.polarwolf.libsequence.config.LibSequenceConfigResult;
 import de.polarwolf.libsequence.main.Main;
+import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
 import de.polarwolf.libsequence.runnings.LibSequenceRunResult;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
@@ -174,7 +175,9 @@ public class LibSequenceCommand implements CommandExecutor {
 			printMessage(sender, MSG_NO_SEQUENCE_PERMISSION, null);
 			return;
 		}
-		LibSequenceRunResult result = controller.execute(sequenceName, sender);
+		LibSequenceRunOptions runOptions = new LibSequenceRunOptions();
+		runOptions.setInitiator(sender);
+		LibSequenceRunResult result = controller.execute(sequenceName, runOptions);
 		if (result.hasError()) {
 			sender.sendMessage(result.toString());
 			return;

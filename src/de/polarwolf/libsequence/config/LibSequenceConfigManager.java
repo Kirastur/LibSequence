@@ -92,7 +92,7 @@ public class LibSequenceConfigManager {
 	public LibSequenceConfigResult reloadSection(LibSequenceCallback callback) {
 		LibSequenceConfigSection sectionOld = findSection(callback);
 		if (sectionOld==null) {
-			return new LibSequenceConfigResult(null, 0, LSCERR_SECTION_NOT_FOUND, null, null);
+			return addSection(callback);
 		}
 		LibSequenceConfigSection sectionNew=callback.createConfigSection(actionValidator);
 		if (sectionNew==null) {

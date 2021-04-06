@@ -7,11 +7,11 @@ import org.bukkit.plugin.Plugin;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
-public class LibSequenceActionBroadcast extends LibSequenceActionGeneric {
-	
+public class LibSequenceActionInfo extends LibSequenceActionGeneric {
+
 	public static final String KEYNAME_MESSAGE = "message";
 
-	public LibSequenceActionBroadcast(Plugin plugin) {
+	public LibSequenceActionInfo(Plugin plugin) {
 		super(plugin);
 	}
 
@@ -28,8 +28,8 @@ public class LibSequenceActionBroadcast extends LibSequenceActionGeneric {
 	public LibSequenceActionResult doExecute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) {
 		String messageText = configStep.getValue(KEYNAME_MESSAGE);
 		messageText = sequence.resolvePlaceholder(messageText);
-		plugin.getServer().broadcastMessage(messageText);
+		plugin.getLogger().info(messageText);
     	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_OK, null);
 	}
-	
+
 }
