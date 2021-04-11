@@ -11,12 +11,12 @@ import de.polarwolf.libsequence.actions.LibSequenceActionResult;
 public final class LibSequenceConfigResult {	
 
 	public final String sequenceName;
-	public final Integer stepNr;
+	public final int stepNr;
 	public final LibSequenceConfigErrors errorCode;
 	public final String errorSubText;
 	public final LibSequenceActionResult actionResult;
 
-	public LibSequenceConfigResult(String sequenceName, Integer stepNr, LibSequenceConfigErrors errorCode, String errorSubText, LibSequenceActionResult actionResult) {
+	public LibSequenceConfigResult(String sequenceName, int stepNr, LibSequenceConfigErrors errorCode, String errorSubText, LibSequenceActionResult actionResult) {
 		this.sequenceName=sequenceName;
 		this.stepNr=stepNr;
 		this.errorCode=errorCode;
@@ -24,7 +24,7 @@ public final class LibSequenceConfigResult {
 		this.actionResult=actionResult;
 	}
 
-	public Boolean hasError() {
+	public boolean hasError() {
 		return errorCode!=LSCERR_OK;
 	}
 

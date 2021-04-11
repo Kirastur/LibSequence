@@ -31,7 +31,7 @@ public class LibSequenceConfigSequence {
 	protected final LibSequenceCallback callback;
 	protected final LibSequenceActionValidator actionValidator;
 
-	protected final Boolean hasEnumError;
+	protected final boolean hasEnumError;
 
 	protected final ArrayList<LibSequenceConfigStep> steps = new ArrayList<>();
 		
@@ -53,10 +53,10 @@ public class LibSequenceConfigSequence {
 		securityToken=UUID.randomUUID().toString();
 	}
 
-	protected Boolean loadStepsFromConfig(ConfigurationSection config) {
-		Integer i = 1;
-		while(config.contains(i.toString(), true)) {
-			ConfigurationSection subConfig = config.getConfigurationSection(i.toString());
+	protected boolean loadStepsFromConfig(ConfigurationSection config) {
+		int i = 1;
+		while(config.contains(Integer.toString(i), true)) {
+			ConfigurationSection subConfig = config.getConfigurationSection(Integer.toString(i));
 			if (subConfig==null) {
 				return false;
 			}
@@ -66,7 +66,7 @@ public class LibSequenceConfigSequence {
 		return (getSize()==(i-1));
 	}
 
-	protected Boolean loadStepsFromList(List<Map<String,String>> config) {
+	protected boolean loadStepsFromList(List<Map<String,String>> config) {
 		for (Map<String,String> stepTouples : config) {
 			if (stepTouples==null) {
 				return false;
@@ -96,7 +96,7 @@ public class LibSequenceConfigSequence {
 	// every plugin can verify if it has the correct one for this sequence
 	// This method is final, so no one can override this to steal a foreign token
 	// This is needed because we have a loop which cycles through all sequences to find the sequence fitting to a given token
-	public final Boolean verifySecurityToken(String tokenToCheck) {
+	public final boolean verifySecurityToken(String tokenToCheck) {
 		return securityToken.equals(tokenToCheck);
 	}
 
@@ -104,11 +104,11 @@ public class LibSequenceConfigSequence {
 		return sequenceName;
 	}
 	
-	public Integer getSize() {
+	public int getSize() {
 		return steps.size();
 	}
 	
-	public LibSequenceConfigStep getStep(Integer stepNr) {
+	public LibSequenceConfigStep getStep(int stepNr) {
 		if ((stepNr > 0) && (stepNr <= getSize())) {
 			return steps.get(stepNr-1);
 		} else  {

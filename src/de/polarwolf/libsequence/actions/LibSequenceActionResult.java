@@ -19,7 +19,7 @@ public final class LibSequenceActionResult {
 		this.errorSubText=errorSubText;
 	}
 
-	public Boolean hasError() {
+	public boolean hasError() {
 		return errorCode!=LSAERR_OK;
 	}
 

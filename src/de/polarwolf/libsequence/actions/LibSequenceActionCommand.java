@@ -28,7 +28,7 @@ public class LibSequenceActionCommand extends LibSequenceActionGeneric {
     		return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_MISSING_ATTRIBUTE, KEYNAME_COMMAND);
     	}
     	String senderType=configStep.getValue(KEYNAME_SENDER);
-   		if (!((senderType == null) || senderType.isEmpty() || senderType.equalsIgnoreCase(SENDER_CONSOLE)|| senderType.equalsIgnoreCase(SENDER_INITIATOR))) {  
+   		if (!((senderType == null) || senderType.isEmpty() || senderType.equalsIgnoreCase(SENDER_CONSOLE) || senderType.equalsIgnoreCase(SENDER_INITIATOR))) {  
        		return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_UNKNOWN_VALUE, KEYNAME_SENDER + ": " + senderType);
     	}
    		return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_OK, null);
@@ -42,13 +42,13 @@ public class LibSequenceActionCommand extends LibSequenceActionGeneric {
     	
     	command = sequence.resolvePlaceholder(command);
     	
+		sender = plugin.getServer().getConsoleSender();
     	if ((senderType != null) && senderType.equalsIgnoreCase(SENDER_INITIATOR) && (sequence.getRunOptions().getInitiator() != null)) {
     		sender = sequence.getRunOptions().getInitiator();
-    	} else {
-    		sender = plugin.getServer().getConsoleSender();
     	}
-		try {
-			Boolean result = plugin.getServer().dispatchCommand(sender, command);
+
+    	try {
+			boolean result = plugin.getServer().dispatchCommand(sender, command);
 			if (!result) {
 		    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_USER_DEFINED_ERROR, USERERROR_NO_TARGET_FOUND);
 			}

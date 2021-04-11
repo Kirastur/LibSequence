@@ -76,11 +76,11 @@ public class LibSequenceConfigSection {
 	// So we have implemented a method to check this
 	// This method is final, so no one can override this to steal the callback
 	// This is needed because we have a loop which cycles through all sections to find the section fitting to the given callback
-	public final Boolean verifyAccess(LibSequenceCallback callbackToCheck) {
+	public final boolean verifyAccess(LibSequenceCallback callbackToCheck) {
 		return callbackToCheck==callback;
 	}	
 
-	public Integer getSize() {
+	public int getSize() {
 		return sequences.size();
 	}
 	

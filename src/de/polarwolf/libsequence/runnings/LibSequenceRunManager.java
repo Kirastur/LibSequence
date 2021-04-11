@@ -12,11 +12,10 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import org.bukkit.command.CommandSender;
-
 import de.polarwolf.libsequence.actions.LibSequenceActionManager;
 import de.polarwolf.libsequence.actions.LibSequenceActionResult;
 import de.polarwolf.libsequence.callback.LibSequenceCallback;
+import de.polarwolf.libsequence.chains.LibSequenceChainManager;
 import de.polarwolf.libsequence.config.LibSequenceConfigManager;
 import de.polarwolf.libsequence.config.LibSequenceConfigResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigSequence;
@@ -27,25 +26,28 @@ import static de.polarwolf.libsequence.runnings.LibSequenceRunErrors.*;
 
 public class LibSequenceRunManager {
 	
-	public static final Integer MAX_RUNNING_SEQUENCES = 20;
+	public static final int MAX_RUNNING_SEQUENCES = 20;
 
 	protected final LibSequenceActionManager actionManager;
 	protected final LibSequenceConfigManager configManager;
 	protected final LibSequencePlaceholderManager placeholderManager;
+	protected final LibSequenceChainManager chainManager;
+	
 	protected final Set<LibSequenceRunningSequence> sequences = new HashSet<>();
 	
-	public LibSequenceRunManager(LibSequenceActionManager actionManager, LibSequenceConfigManager configManager, LibSequencePlaceholderManager placeholderManager) {
+	public LibSequenceRunManager(LibSequenceActionManager actionManager, LibSequenceConfigManager configManager, LibSequencePlaceholderManager placeholderManager, LibSequenceChainManager chainManager) {
 		this.actionManager = actionManager;
 		this.configManager = configManager;
 		this.placeholderManager = placeholderManager;
+		this.chainManager = chainManager;
 	}
 	
-	public Integer getMaxRunningSequences() {
+	public int getMaxRunningSequences() {
 		return MAX_RUNNING_SEQUENCES;
 	}
 	
-	public Integer getNumberOfRunningSequences() {
-		Integer i=0;
+	public int getNumberOfRunningSequences() {
+		int i=0;
 		for (LibSequenceRunningSequence sequence : sequences) {
 			if (!sequence.isFinished()) {
 				i = i +1;
@@ -90,18 +92,11 @@ public class LibSequenceRunManager {
 		if (runOptions.isSingleton() && isRunning(configSequence)) {
 			return new LibSequenceRunResult(null, configSequence.getSequenceName(), LSRERR_SINGLETON_RUNNING, null);
 		}
+		chainManager.resolveChain(runOptions);
 		LibSequenceRunningSequence runningSequence = new LibSequenceRunningSequence(callback, this, configSequence, runOptions);
 		sequences.add(runningSequence);
 		return new LibSequenceRunResult(runningSequence, configSequence.getSequenceName(), LSRERR_OK, null);
 	}
-
-	@Deprecated
-	public LibSequenceRunResult execute(LibSequenceCallback callback, @Nonnull LibSequenceConfigSequence configSequence, String securityToken, CommandSender initiator) {
-		LibSequenceRunOptions runOptions = new LibSequenceRunOptions();
-		runOptions.setInitiator(initiator);
-		return execute (callback, configSequence, securityToken, runOptions);	
-	}
-	
 	
 	// Cancel a running sequence
 	public LibSequenceRunResult cancel(LibSequenceRunningSequence runningSequence) {
@@ -115,7 +110,7 @@ public class LibSequenceRunManager {
 	// Cancel all running sequences with a given name
 	// This is an Admin-Function, so you will net to provide the callback-object for verification
 	public LibSequenceRunResult cancelByName (LibSequenceCallback callback, String sequenceName) {
-		Integer i = 0;
+		int i = 0;
 		for (LibSequenceRunningSequence runningSequence : sequences) {
 			if ((runningSequence.getName().equalsIgnoreCase(sequenceName)) && 
 				(runningSequence.configSequence.verifyAccess(callback)) &&
@@ -157,7 +152,7 @@ public class LibSequenceRunManager {
 	}
 
 	private void removeOldSequences() {
-		Integer c=0;
+		int  c=0;
 		Iterator<LibSequenceRunningSequence> i = sequences.iterator();
 		while (i.hasNext()) {
 			LibSequenceRunningSequence sequence = i.next();

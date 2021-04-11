@@ -54,7 +54,7 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	// No need to overwrite this
 	// This is just because the Lib itself is not aware of the plugin  
 	@Override
-	public BukkitTask scheduleTask (BukkitRunnable task, Integer wait) {
+	public BukkitTask scheduleTask (BukkitRunnable task, int wait) {
 		return task.runTaskLater(plugin, wait);
 	}
 	

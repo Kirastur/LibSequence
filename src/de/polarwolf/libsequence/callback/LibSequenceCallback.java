@@ -17,7 +17,7 @@ public interface LibSequenceCallback {
 	// The wait task is always executed in the context of the plugin who created the sequence
 	// not the plugin which has registered the action
 	// not the plugin which has called the DoExecute
-	public BukkitTask scheduleTask (BukkitRunnable task, Integer wait);
+	public BukkitTask scheduleTask (BukkitRunnable task, int wait);
 	
 	// This method is called if an error occurs during action execution 
 	public void onExecutionError (LibSequenceRunningSequence secuence, LibSequenceActionResult actionError);

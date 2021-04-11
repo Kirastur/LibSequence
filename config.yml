@@ -70,12 +70,21 @@ commands:
    # - So we give you the option to disable them
    enableCommandAction: true
   
+   # Enables the Chain to track indirect sequence starts
+   # e.g. Player => Button => CommandBlock => Sequence
+   #
+   # - Disable if you do not need interaction-tracking
+   # - and get a slight bit more performance 
+   #
+   enableChainEvents: true
+    
+  
 sequences:
 
    demo:
       1:
          action: broadcast
-         message: First notification
+         message: Sequence is started by %PLAYER%
          wait-after-action: 10
 
       2:

@@ -22,7 +22,7 @@ public final class LibSequenceRunResult {
 		this.configResult=configResult;
 	}
 
-	public Boolean hasError() {
+	public boolean hasError() {
 		return errorCode!=LSRERR_OK;
 	}
 

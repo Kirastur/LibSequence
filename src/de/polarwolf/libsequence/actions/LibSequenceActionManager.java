@@ -19,7 +19,7 @@ public class LibSequenceActionManager {
 		actionValidator = new LibSequenceActionValidator(this);
 	}
 	
-	public Boolean hasAction(String actionName) {
+	public boolean hasAction(String actionName) {
 		for (String actionKey: actionMap.keySet()) {
 			if (actionName.equals(actionKey)) {
 				return true;

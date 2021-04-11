@@ -11,12 +11,13 @@ import org.bukkit.entity.Player;
 
 public class LibSequenceRunOptions {
 	
-	public static final String RUNOPTION_USER = "USER";
+	public static final String RUNOPTION_NAME = "NAME";
 	public static final String RUNOPTION_PLAYER = "PLAYER";
 	
 	protected Map<String,String> placeholders = new HashMap<>();
 	protected List<String> authorizationKeys = new ArrayList<>();
 	protected CommandSender initiator;
+	protected Player chainPlayer;
 	protected boolean singleton = false;
 	
 	public void addPlaceholder (String name, String value) {
@@ -54,11 +55,11 @@ public class LibSequenceRunOptions {
 				Player player = (Player)initiator;
 				displayName=player.getDisplayName();
 			}
-			placeholders.put(RUNOPTION_USER, userName);
+			placeholders.put(RUNOPTION_NAME, userName);
 			placeholders.put(RUNOPTION_PLAYER, displayName);
 		}
 	}
-	
+		
 	public boolean isSingleton() {
 		return singleton;
 	}

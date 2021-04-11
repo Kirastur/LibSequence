@@ -4,14 +4,21 @@ import static de.polarwolf.libsequence.runnings.LibSequenceRunErrors.*;
 
 import java.util.Set;
 
-import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
 
 import de.polarwolf.libsequence.actions.LibSequenceAction;
+import de.polarwolf.libsequence.actions.LibSequenceActionBroadcast;
+import de.polarwolf.libsequence.actions.LibSequenceActionCommand;
+import de.polarwolf.libsequence.actions.LibSequenceActionInfo;
 import de.polarwolf.libsequence.actions.LibSequenceActionManager;
+import de.polarwolf.libsequence.actions.LibSequenceActionNotify;
 import de.polarwolf.libsequence.actions.LibSequenceActionResult;
+import de.polarwolf.libsequence.actions.LibSequenceActionTitle;
 import de.polarwolf.libsequence.actions.LibSequenceActionValidator;
 import de.polarwolf.libsequence.callback.LibSequenceCallback;
+import de.polarwolf.libsequence.chains.LibSequenceChain;
+import de.polarwolf.libsequence.chains.LibSequenceChainCommandblock;
+import de.polarwolf.libsequence.chains.LibSequenceChainManager;
 import de.polarwolf.libsequence.config.LibSequenceConfigManager;
 import de.polarwolf.libsequence.config.LibSequenceConfigResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigSequence;
@@ -30,14 +37,19 @@ public class LibSequenceSequencer {
 	protected final LibSequenceConfigManager configManager;
 	protected final LibSequencePlaceholderManager placeholderManager;
 	protected final LibSequenceRunManager runManager;
+	protected final LibSequenceChainManager chainManager;
 	
-	public LibSequenceSequencer(Plugin plugin) {
+	public LibSequenceSequencer(Plugin plugin, boolean includeCommand, boolean enableChainEvents) {
 		actionManager = createActionManager();
 		configManager = createConfigManager();
 		placeholderManager = createPlaceholderManager();
-		registerPredefinedPlaceholders(plugin);
+		chainManager = createChainManager();
 		runManager = createRunManager();
+		registerPredefinedActions(plugin, includeCommand);
+		registerPredefinedPlaceholders(plugin);
+		registerPredefinedChains(plugin, enableChainEvents);
 	}
+
 	
 	// ActionManager Interface
 	public LibSequenceActionResult registerAction(String actionName, LibSequenceAction action) {
@@ -47,6 +59,7 @@ public class LibSequenceSequencer {
 	protected LibSequenceActionValidator getActionValidator() {
 		return actionManager.actionValidator;
 	}
+
 	
 	// RunManager Interface
 	public LibSequenceRunResult executeForeignSequence(LibSequenceCallback callback, String securityToken, LibSequenceRunOptions runOptions) {
@@ -60,13 +73,6 @@ public class LibSequenceSequencer {
 		return runManager.execute(callback, sequence, securityToken, runOptions);
 	}
 	
-	@Deprecated
-	public LibSequenceRunResult executeForeignSequence(LibSequenceCallback callback, String securityToken, CommandSender initiator) {
-		LibSequenceRunOptions runOptions = new LibSequenceRunOptions();
-		runOptions.setInitiator(initiator);
-		return executeForeignSequence(callback, securityToken, runOptions);
-	}
-
 	public LibSequenceRunResult executeOwnSequence(LibSequenceCallback callback, String sequenceName, LibSequenceRunOptions runOptions) {
 		LibSequenceConfigSequence sequence = configManager.findOwnSequence(callback, sequenceName);
 		if (sequence==null) {
@@ -76,13 +82,6 @@ public class LibSequenceSequencer {
 		return runManager.execute(callback, sequence, securityToken, runOptions);
 	}
 
-	@Deprecated
-	public LibSequenceRunResult executeOwnSequence(LibSequenceCallback callback, String sequenceName, CommandSender initiator) {
-		LibSequenceRunOptions runOptions = new LibSequenceRunOptions();
-		runOptions.setInitiator(initiator);
-		return executeOwnSequence(callback, sequenceName, runOptions);
-	}
-	
 	public LibSequenceRunResult cancelSequence(LibSequenceRunningSequence runningSequence) {
 		return runManager.cancel(runningSequence);
 	}
@@ -94,6 +93,7 @@ public class LibSequenceSequencer {
 	public Set<LibSequenceRunningSequence> queryRunningSequences(LibSequenceCallback callback) {
 		return runManager.queryRunningSequences(callback);
 	}
+
 
 	// ConfigManager Interface
 	public LibSequenceConfigResult addSection(LibSequenceCallback callback) {
@@ -116,12 +116,12 @@ public class LibSequenceSequencer {
 		return null;
 	}
 	
-	public Boolean hasForeignSequence(String securityToken) {
+	public boolean hasForeignSequence(String securityToken) {
 		LibSequenceConfigSequence sequence = configManager.findForeignSequence(securityToken);
 		return (sequence!=null);
 	}
 	
-	public Boolean hasOwnSequence(LibSequenceCallback callback, String sequenceName) {
+	public boolean hasOwnSequence(LibSequenceCallback callback, String sequenceName) {
 		LibSequenceConfigSequence sequence = configManager.findOwnSequence(callback, sequenceName);
 		return (sequence!=null);
 	}
@@ -129,19 +129,20 @@ public class LibSequenceSequencer {
 	public Set<String> getSequenceNames(LibSequenceCallback callback) {
 		return configManager.getSequenceNames (callback);
 	}
+
 	
 	// PlaceholderManager
 	public void registerPlaceholder(LibSequencePlaceholder placeholder) {
 		placeholderManager.registerPlaceholder(placeholder);
 	}
+
 	
-	protected void registerPredefinedPlaceholders(Plugin plugin) {
-		placeholderManager.registerPlaceholder(new LibSequencePlaceholderInternal());
-		if (plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-			placeholderManager.registerPlaceholder(new LibSequencePlaceholderAPI());
-		}
+	// ChainManager
+	public void registerChain(LibSequenceChain chain) {
+		chainManager.registerChain(chain);
 	}
 	
+
 	// Initialization
 	// Override this if you want to use custom Managers
 	protected LibSequenceActionManager createActionManager() {
@@ -156,9 +157,38 @@ public class LibSequenceSequencer {
 		return new LibSequencePlaceholderManager();
 	}
 
-	protected LibSequenceRunManager createRunManager() {
-		return new LibSequenceRunManager (actionManager, configManager, placeholderManager);
+	protected LibSequenceChainManager createChainManager() {
+		return new LibSequenceChainManager();
 	}
 
+	protected LibSequenceRunManager createRunManager() {
+		return new LibSequenceRunManager (actionManager, configManager, placeholderManager, chainManager);
+	}
+		
+
+	// register PreDefinedElemets
+	// Override this if you want to use customize registration
+	protected void registerPredefinedActions(Plugin plugin, boolean includeCommand) {
+		registerAction("broadcast", new LibSequenceActionBroadcast(plugin));
+		registerAction("info", new LibSequenceActionInfo(plugin));
+		registerAction("notify", new LibSequenceActionNotify(plugin));
+		registerAction("title", new LibSequenceActionTitle(plugin));
+		if (includeCommand) {
+			registerAction("command", new LibSequenceActionCommand(plugin));
+		}
+	}
+	protected void registerPredefinedPlaceholders(Plugin plugin) {
+		registerPlaceholder(new LibSequencePlaceholderInternal());
+		if (plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+			registerPlaceholder(new LibSequencePlaceholderAPI());
+		}
+	}
+	
+	protected void registerPredefinedChains(Plugin plugin, boolean enableChainEvents) {
+		if (enableChainEvents) {
+			registerChain(new LibSequenceChainCommandblock(plugin));
+		}
+	}
+	
 }
 

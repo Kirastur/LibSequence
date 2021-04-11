@@ -21,9 +21,9 @@ public class LibSequenceRunningSequence {
 	protected final LibSequenceConfigSequence configSequence;
 	protected final LibSequenceRunOptions runOptions;
 	
-	protected Boolean bCancel = false;
-	protected Boolean bFinish = false;
-	protected Integer step = 0;
+	protected boolean bCancel = false;
+	protected boolean bFinish = false;
+	protected int step = 0;
 
 	protected BukkitTask currentTask = null;
 	
@@ -41,15 +41,15 @@ public class LibSequenceRunningSequence {
 		callback.debugSequenceStarted(this);
 	}
 	
-	public Boolean isCancelled() {
+	public boolean isCancelled() {
 		return bCancel;
 	}
 	
-	public Boolean isFinished() {
+	public boolean isFinished() {
 		return bFinish;
 	}
 	
-	public Integer getStepNr() {
+	public int getStepNr() {
 		return step;
 	}
 	
@@ -80,7 +80,7 @@ public class LibSequenceRunningSequence {
 	protected void runManagerOnFinish() {
 		runManager.onFinish(this);	
 	}
- 	protected BukkitTask createScheduledTask(Integer wait) {
+ 	protected BukkitTask createScheduledTask(int wait) {
 		SingleStepTask task = new SingleStepTask(this);
 		return callback.scheduleTask(task, wait);
 	}
@@ -110,7 +110,7 @@ public class LibSequenceRunningSequence {
 				if (result.hasError()) {
 					callback.onExecutionError(this, result);
 				}
-				Integer wait = configStep.getWait();
+				int wait = configStep.getWait();
 				if (wait==0) {
 					wait=1;
 				} else {

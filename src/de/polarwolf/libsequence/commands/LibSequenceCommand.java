@@ -44,7 +44,7 @@ public class LibSequenceCommand implements CommandExecutor {
 		sender.sendMessage(messageText);
 	}
 
-	protected boolean checkNrOfArguments1 (CommandSender sender, Integer argLength) {
+	protected boolean checkNrOfArguments1 (CommandSender sender, int argLength) {
 		if (argLength > 1) {
 			printMessage (sender, MSG_TOO_MANY_PARAMETERS, null);
 			return false;
@@ -52,7 +52,7 @@ public class LibSequenceCommand implements CommandExecutor {
 		return true;
 	}
 
-	protected boolean checkNrOfArguments2 (CommandSender sender, Integer argLength) {
+	protected boolean checkNrOfArguments2 (CommandSender sender, int argLength) {
 		if (argLength < 2) {
 			printMessage (sender, MSG_SEQUENCE_NAME_MISSING, null);
 			return false;

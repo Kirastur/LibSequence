@@ -27,7 +27,7 @@ public class LibSequenceConfigStep {
 	// Please use the public getter for this
 	// Perhaps someone wants to override it
 	private final String sequenceName;
-	private final Integer stepNr;
+	private final int stepNr;
 	
 	// The actionValidator is called during syntax check
 	protected final LibSequenceActionValidator actionValidator;
@@ -38,7 +38,7 @@ public class LibSequenceConfigStep {
 	// Container for the Name/Value pairs of the step
 	protected final Map<String,String> stepData = new  HashMap<>();
 	
-	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, Integer stepNr, @Nonnull ConfigurationSection config) {
+	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, int stepNr, @Nonnull ConfigurationSection config) {
 		this.actionValidator=actionValidator;
 		this.sequenceName=sequenceName;
 		this.stepNr=stepNr;
@@ -46,7 +46,7 @@ public class LibSequenceConfigStep {
 		keyWithSyntaxError=loadStepFromConfig(config);
 	}
 	
-	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, Integer stepNr, @Nonnull Map<String,String> config) {
+	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, int stepNr, @Nonnull Map<String,String> config) {
 		this.actionValidator=actionValidator;
 		this.sequenceName=sequenceName;
 		this.stepNr=stepNr;
@@ -81,7 +81,7 @@ public class LibSequenceConfigStep {
 	
 	// We use this check for the ActionManager to verify that the step belongs to the correct sequencer
 	// This is not a security feature because the ActionValidator is public
-	public Boolean verifyActionValidator(LibSequenceActionValidator actionValidatorToTest) {
+	public boolean verifyActionValidator(LibSequenceActionValidator actionValidatorToTest) {
 		return (actionValidatorToTest==actionValidator);
 	}
 		
@@ -89,7 +89,7 @@ public class LibSequenceConfigStep {
 		return sequenceName;
 	}
 	
-	public Integer getStepNr() {
+	public int getStepNr() {
 		return stepNr;
 	}
 	
@@ -98,7 +98,7 @@ public class LibSequenceConfigStep {
 	}
 	
 	// Get the number of seconds to wait after the action is executed
-	public Integer getWait() {
+	public int getWait() {
 		String waitTime = getValue(KEYNAME_WAIT);
 		if (waitTime==null) {
 			return 0; //it could be that the step contains no wait, then set the wait to zero
