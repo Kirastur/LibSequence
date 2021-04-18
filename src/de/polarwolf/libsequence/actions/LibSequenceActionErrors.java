@@ -10,7 +10,8 @@ public enum LibSequenceActionErrors {
 	LSAERR_WRONG_INSTANCE ("Step belongs to another instance"),
 	LSAERR_NOT_AUTHORIZED ("Action is not authorizied"),
 	LSAERR_EXCEPTION ("Exception caught"),
-	LSAERR_UNKNOWN_VALUE ("Unknown attribute value");
+	LSAERR_UNKNOWN_VALUE ("Unknown attribute value"),
+	LSAERR_CHECK_FAILED ("Check failed");
 
 	private final String errorText;
 	

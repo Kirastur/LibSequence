@@ -3,19 +3,13 @@ package de.polarwolf.libsequence.actions;
 import static de.polarwolf.libsequence.actions.LibSequenceActionErrors.*;
 
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public class LibSequenceActionNotify extends LibSequenceActionGeneric {
 
 	public static final String KEYNAME_MESSAGE = "message";
-	public static final String KEYNAME_PERMISSION = "permission";
-
-	public LibSequenceActionNotify(Plugin plugin) {
-		super(plugin);
-	}
+	public static final String KEYNAME_PERMISSION = "include_permission";
 
 	@Override
     public LibSequenceActionResult checkSyntax(LibSequenceConfigStep configStep) {
@@ -35,12 +29,13 @@ public class LibSequenceActionNotify extends LibSequenceActionGeneric {
 
 	@Override
 	public LibSequenceActionResult doExecute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) {
-		String messageText = configStep.getValue(KEYNAME_MESSAGE);
 		String permission = configStep.getValue(KEYNAME_PERMISSION);
-		messageText = sequence.resolvePlaceholder(messageText);
+		permission = sequence.resolvePlaceholder(permission);
 
-		for (Player player : plugin.getServer().getOnlinePlayers()) {
+		for (Player player : sequence.getPlugin().getServer().getOnlinePlayers()) {
 			if (checkPermission(player, permission)) {
+				String messageText = configStep.getValueLocalized(KEYNAME_MESSAGE, player.getLocale());
+				messageText = sequence.resolvePlaceholder(messageText);
 				player.sendMessage(messageText);
 			}
 		}

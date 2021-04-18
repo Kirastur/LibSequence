@@ -67,5 +67,14 @@ public class LibSequenceRunOptions {
 	public void setSingleton(boolean singleton) {
 		this.singleton = singleton;
 	}
+	
+	public String getLocale() {
+		if (!(initiator instanceof Player)) {
+			return null;
+		}
+		Player player = (Player)initiator;
+		return player.getLocale();
+		}
+	
 
 }

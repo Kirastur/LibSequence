@@ -55,11 +55,14 @@ startup:
   
    # - The LibSequencer is not designed to prohibit the use of private sequencers,
    # -   so there is no config option to prevent this.
-   # -
-   # - But be aware:
-   # -   If you use private sequencers, you must provide all actions on your own.
-      
-commands:
+
+
+# Limit the fuctionallity of the orchestrator (SequencerAPI)
+#
+# - Here cou can disable specitic features
+# - for security reason or if you want to get more performance       
+orchestrator:
+
    # Enables command action
    #
    # - If set to false, the following actions are disabled:
@@ -77,20 +80,52 @@ commands:
    # - and get a slight bit more performance 
    #
    enableChainEvents: true
-    
+ 
+
+# Configure options for the high-level ControllerAPI
+#
+# - This also affects the /libsequence commands 
+controller:
+
+   # Enbale Debug
+   #
+   # - The LibSequence Sequencer does not have any debug output
+   # - All Messages are sent to the callback-interface
+   #
+   # - The Controller receives this messages through the callbackGeneric
+   # - so he has to deal with it
+   #
+   # - If enabled, these messages are printout to the server console
+   # - If disabled, these messages are thrown away
+   enableDebugOutput: true
   
+ 
+# OK, now let's define the sequences. Per default, only a "demo" sequence is here
+#
+# - You may optionally quote the Strings with "" if the parser has any problems
+# - Sequence names are case-sensitive
 sequences:
 
    demo:
       1:
-         action: broadcast
+         action: notify
          message: Sequence is started by %PLAYER%
-         wait-after-action: 10
-
+         message_de_de: Spieler %PLAYER% hat die Sequence gestartet
       2:
+         action: broadcast
+         message: First notification
+         wait-after-action: 10
+      3:
          action: broadcast
          message: Second notification 10 Seconds later
 
+
+# Define translation of messages
+# 
+# - The messages here are only used for the /libsequence command
+# - they do not affect ControllerAPI or SequencerAPI
+#
+# - If no translation is defied, the default english messages are used 
 messages:
    de_de:
       MSG_UNKNOWN_OPTION: "Unbekannte Option. Rufe mit '/libsequence help' die möglichen Optionen auf"

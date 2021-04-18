@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-
 import org.bukkit.configuration.ConfigurationSection;
 
 import de.polarwolf.libsequence.actions.LibSequenceActionValidator;
@@ -35,7 +33,7 @@ public class LibSequenceConfigSequence {
 
 	protected final ArrayList<LibSequenceConfigStep> steps = new ArrayList<>();
 		
-	public LibSequenceConfigSequence(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, String sequenceName, @Nonnull ConfigurationSection config) {
+	public LibSequenceConfigSequence(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, String sequenceName, ConfigurationSection config) {
 		this.callback=callback;
 		this.actionValidator=actionValidator;
 		this.sequenceName=sequenceName;
@@ -44,7 +42,7 @@ public class LibSequenceConfigSequence {
 		securityToken=UUID.randomUUID().toString();
 	}
 	
-	public LibSequenceConfigSequence(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, String sequenceName, @Nonnull List<Map<String,String>> config) {
+	public LibSequenceConfigSequence(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, String sequenceName, List<Map<String,String>> config) {
 		this.callback=callback;
 		this.actionValidator=actionValidator;
 		this.sequenceName=sequenceName;

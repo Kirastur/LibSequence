@@ -14,6 +14,9 @@ public class LibSequencePlaceholderManager {
 	}
 	
 	public String resolvePlaceholder(String messageText, LibSequenceRunOptions runOptions) {
+		if (messageText == null) {
+			return null;
+		}
 		for (LibSequencePlaceholder placeholder : placeholders) {
 			messageText = placeholder.resolvePlaceholders(messageText, runOptions);
 		}

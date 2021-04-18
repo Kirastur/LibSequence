@@ -67,46 +67,28 @@ public class LibSequenceConfigManager {
 	}
 			
 
-	// Add a section to the config manager
+	// Add or reload a section to the config manager
 	// A section can contains one or more sequences
 	// Each section must have its unique callback
-	public LibSequenceConfigResult addSection(LibSequenceCallback callback) {
+	// This is a admin function so you must authenticate yourself by giving me the callback object 
+	public LibSequenceConfigResult loadSection(LibSequenceCallback callback) {
 		LibSequenceConfigSection oldSection = findSection(callback);
-		if (oldSection!=null) {
-			return new LibSequenceConfigResult(null, 0, LSCERR_SECTION_ALREADY_EXISTS, null, null);
-		}
-		LibSequenceConfigSection sectionNew=callback.createConfigSection(actionValidator);
-		if (sectionNew==null) {
+		
+		LibSequenceConfigSection newSection=callback.createConfigSection(actionValidator);
+		if (newSection==null) {
 			return new LibSequenceConfigResult(null, 0, LSCERR_SECTION_GENERATION_ERROR, null, null);
 		}
-		LibSequenceConfigResult result = sectionNew.checkSyntax();
+		LibSequenceConfigResult result = newSection.checkSyntax();
 		if (result.hasError()) {
 			return result;
 		}
-		sections.add(sectionNew);
+		if (oldSection != null) {
+			sections.remove(oldSection);
+		}
+		sections.add(newSection);
 		return new LibSequenceConfigResult(null, 0, LSCERR_OK, null, null);
 	}
 	
-	// Reload a complete section including all of their sequences
-	// This is a admin function so you must authenticate yourself by giving me the callback object 
-	public LibSequenceConfigResult reloadSection(LibSequenceCallback callback) {
-		LibSequenceConfigSection sectionOld = findSection(callback);
-		if (sectionOld==null) {
-			return addSection(callback);
-		}
-		LibSequenceConfigSection sectionNew=callback.createConfigSection(actionValidator);
-		if (sectionNew==null) {
-			return new LibSequenceConfigResult(null, 0, LSCERR_SECTION_GENERATION_ERROR, null, null);
-		}
-		LibSequenceConfigResult result = sectionNew.checkSyntax();
-		if (result.hasError()) {
-			return result;
-		}
-		sections.remove(sectionOld);
-		sections.add(sectionNew);
-		return new LibSequenceConfigResult(null, 0, LSCERR_OK, null, null);
-	}
-		
 	// Removes a complete section including all of their sequences
 	// This is a admin function so you must authenticate yourself by giving me the callback object 
 	public LibSequenceConfigResult removeSection(LibSequenceCallback callback) {

@@ -10,36 +10,24 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
-
-import de.polarwolf.libsequence.actions.LibSequenceActionManager;
 import de.polarwolf.libsequence.actions.LibSequenceActionResult;
 import de.polarwolf.libsequence.callback.LibSequenceCallback;
-import de.polarwolf.libsequence.chains.LibSequenceChainManager;
-import de.polarwolf.libsequence.config.LibSequenceConfigManager;
 import de.polarwolf.libsequence.config.LibSequenceConfigResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigSequence;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
-import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderManager;
-
+import de.polarwolf.libsequence.orchestrator.LibSequenceOrchestrator;
 import static de.polarwolf.libsequence.runnings.LibSequenceRunErrors.*;
 
 public class LibSequenceRunManager {
 	
 	public static final int MAX_RUNNING_SEQUENCES = 20;
 
-	protected final LibSequenceActionManager actionManager;
-	protected final LibSequenceConfigManager configManager;
-	protected final LibSequencePlaceholderManager placeholderManager;
-	protected final LibSequenceChainManager chainManager;
+	protected final LibSequenceOrchestrator orchestrator;
 	
 	protected final Set<LibSequenceRunningSequence> sequences = new HashSet<>();
 	
-	public LibSequenceRunManager(LibSequenceActionManager actionManager, LibSequenceConfigManager configManager, LibSequencePlaceholderManager placeholderManager, LibSequenceChainManager chainManager) {
-		this.actionManager = actionManager;
-		this.configManager = configManager;
-		this.placeholderManager = placeholderManager;
-		this.chainManager = chainManager;
+	public LibSequenceRunManager(LibSequenceOrchestrator orchestrator) {
+		this.orchestrator = orchestrator;
 	}
 	
 	public int getMaxRunningSequences() {
@@ -65,16 +53,22 @@ public class LibSequenceRunManager {
 		return false;
 	}
 	
+	// PlaceholderManager takes care if messageTest is null
 	public String resolvePlaceholder(String messageText, LibSequenceRunOptions runOptions) {
-		return placeholderManager.resolvePlaceholder(messageText, runOptions);
+		return orchestrator.getPlaceholderManager().resolvePlaceholder(messageText, runOptions);
 	}
 	
 	
 	// Start a sequence
 	// For authorization you must provide the authorization-token
 	// The new RunningSequence-Object is included in the Result-Object
-	public LibSequenceRunResult execute(LibSequenceCallback callback, @Nonnull LibSequenceConfigSequence configSequence, String securityToken, LibSequenceRunOptions runOptions) {
+	// We take care that the runOption object always exists
+	public LibSequenceRunResult execute(LibSequenceCallback callback, LibSequenceConfigSequence configSequence, String securityToken, LibSequenceRunOptions runOptions) {
+		if (runOptions == null) {
+			runOptions = new LibSequenceRunOptions();
+		}
 		removeOldSequences();
+
 		LibSequenceConfigResult result = configSequence.checkSyntax();
 		if (result.hasError()) {
 			return new LibSequenceRunResult(null, configSequence.getSequenceName(), LSRERR_CONFIG, result);
@@ -85,14 +79,14 @@ public class LibSequenceRunManager {
 		if (getNumberOfRunningSequences() > getMaxRunningSequences()) {
 			return new LibSequenceRunResult(null, configSequence.getSequenceName(), LSRERR_TOO_MANY, null);
 		}
-		LibSequenceActionResult actionResult = actionManager.checkAuthorization(runOptions, configSequence);
+		LibSequenceActionResult actionResult = orchestrator.getActionManager().checkAuthorization(runOptions, configSequence);
 		if (actionResult.hasError()) {
 			return new LibSequenceRunResult(null, configSequence.getSequenceName(), LSRERR_ACTION_AUTH_FAILED, null);
 		}
 		if (runOptions.isSingleton() && isRunning(configSequence)) {
 			return new LibSequenceRunResult(null, configSequence.getSequenceName(), LSRERR_SINGLETON_RUNNING, null);
 		}
-		chainManager.resolveChain(runOptions);
+		orchestrator.getChainManager().resolveChain(runOptions);
 		LibSequenceRunningSequence runningSequence = new LibSequenceRunningSequence(callback, this, configSequence, runOptions);
 		sequences.add(runningSequence);
 		return new LibSequenceRunResult(runningSequence, configSequence.getSequenceName(), LSRERR_OK, null);
@@ -109,17 +103,20 @@ public class LibSequenceRunManager {
 	
 	// Cancel all running sequences with a given name
 	// This is an Admin-Function, so you will net to provide the callback-object for verification
+	// A cancel can remove the sequence from the list, so we must use an iterator here
 	public LibSequenceRunResult cancelByName (LibSequenceCallback callback, String sequenceName) {
-		int i = 0;
-		for (LibSequenceRunningSequence runningSequence : sequences) {
+		int nrOfSequencesCancelled = 0;
+		Iterator<LibSequenceRunningSequence> iter = sequences.iterator();
+		while (iter.hasNext()) {
+			LibSequenceRunningSequence runningSequence = iter.next();
 			if ((runningSequence.getName().equalsIgnoreCase(sequenceName)) && 
-				(runningSequence.configSequence.verifyAccess(callback)) &&
-				(!runningSequence.isFinished()) && 
-				(!cancel(runningSequence).hasError())) {
-				i = i +1;
+				(runningSequence.verifyAccess(callback)) &&
+				(!runningSequence.isFinished())) {
+				runningSequence.cancel();
+				nrOfSequencesCancelled = nrOfSequencesCancelled +1;
 			}
 		}
-		if (i==0) {
+		if (nrOfSequencesCancelled == 0) {
 			return new LibSequenceRunResult(null, sequenceName, LSRERR_NOT_FOUND, null);			
 		}
 		return new LibSequenceRunResult(null, sequenceName, LSRERR_OK, null);
@@ -128,7 +125,7 @@ public class LibSequenceRunManager {
 	public Set<LibSequenceRunningSequence> queryRunningSequences(LibSequenceCallback callback) {
 		HashSet<LibSequenceRunningSequence> result = new HashSet<>();
 		for (LibSequenceRunningSequence sequence: sequences) {
-			if ((sequence.configSequence.verifyAccess(callback)) && (!sequence.isFinished())) {
+			if ((sequence.verifyAccess(callback)) && (!sequence.isFinished())) {
 				result.add(sequence);
 			}
 		}
@@ -136,19 +133,19 @@ public class LibSequenceRunManager {
 	}
 	
 	protected void onInit(LibSequenceRunningSequence runningSequence) {
-		actionManager.onInit(runningSequence);
+		orchestrator.getActionManager().onInit(runningSequence);
 	}
 	
 	protected void onCancel(LibSequenceRunningSequence runningSequence) {
-		actionManager.onCancel(runningSequence);
+		orchestrator.getActionManager().onCancel(runningSequence);
 	}
 
 	protected void onFinish(LibSequenceRunningSequence runningSequence) {
-		actionManager.onFinish(runningSequence);
+		orchestrator.getActionManager().onFinish(runningSequence);
 	}
 
 	protected LibSequenceActionResult doExecute(LibSequenceRunningSequence runningSequence, LibSequenceConfigStep configStep) {
-		return actionManager.doExecute(runningSequence, configStep);
+		return orchestrator.getActionManager().doExecute(runningSequence, configStep);
 	}
 
 	private void removeOldSequences() {

@@ -13,7 +13,7 @@ import static de.polarwolf.libsequence.actions.LibSequenceActionErrors.*;
 public class LibSequenceActionManager {
 
 	protected final Map<String, LibSequenceAction> actionMap = new HashMap <>();
-	public final LibSequenceActionValidator actionValidator;
+	protected final LibSequenceActionValidator actionValidator;
 	
 	public LibSequenceActionManager() {
 		actionValidator = new LibSequenceActionValidator(this);
@@ -36,6 +36,10 @@ public class LibSequenceActionManager {
 		return new LibSequenceActionResult(null, actionName, LSAERR_OK, null);
 	}
 	
+	public LibSequenceActionValidator getActionValidator() {
+		return actionValidator;
+	}
+
 	public LibSequenceAction getActionByName (String actionName) {
 		return actionMap.get(actionName);
 	}

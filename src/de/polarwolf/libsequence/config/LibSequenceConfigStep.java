@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.annotation.Nonnull;
-
 import org.bukkit.configuration.ConfigurationSection;
 
 import static de.polarwolf.libsequence.config.LibSequenceConfigErrors.*;
@@ -26,8 +24,8 @@ public class LibSequenceConfigStep {
 	
 	// Please use the public getter for this
 	// Perhaps someone wants to override it
-	private final String sequenceName;
-	private final int stepNr;
+	protected final String sequenceName;
+	protected final int stepNr;
 	
 	// The actionValidator is called during syntax check
 	protected final LibSequenceActionValidator actionValidator;
@@ -38,7 +36,7 @@ public class LibSequenceConfigStep {
 	// Container for the Name/Value pairs of the step
 	protected final Map<String,String> stepData = new  HashMap<>();
 	
-	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, int stepNr, @Nonnull ConfigurationSection config) {
+	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, int stepNr, ConfigurationSection config) {
 		this.actionValidator=actionValidator;
 		this.sequenceName=sequenceName;
 		this.stepNr=stepNr;
@@ -46,7 +44,7 @@ public class LibSequenceConfigStep {
 		keyWithSyntaxError=loadStepFromConfig(config);
 	}
 	
-	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, int stepNr, @Nonnull Map<String,String> config) {
+	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, int stepNr, Map<String,String> config) {
 		this.actionValidator=actionValidator;
 		this.sequenceName=sequenceName;
 		this.stepNr=stepNr;
@@ -93,8 +91,34 @@ public class LibSequenceConfigStep {
 		return stepNr;
 	}
 	
+	// Please remember: return is null if no entry is found
 	public String getValue(String keyName) {
 		return stepData.get(keyName);
+	}
+	
+	// Please remember: return is null if no entry is found
+	public String getValueLocalized(String keyName, String locale) {
+		if (locale != null) {
+
+			// 1st try: take the full language (e.g. "de_de")
+			if (locale.length() >= 5) {
+				String s = getValue(keyName + "_" + locale.substring(0, 5));
+				if (s != null) {
+					return s;
+				}
+			}
+		
+			// 2nd try: take the group language (e.g. "de")
+			if (locale.length() >= 2) {
+				String s = getValue (keyName + "_" + locale.substring(0,  2));
+				if (s != null) {
+					return s;
+				}
+			}
+		}
+		
+		// No localized string found, return default
+		return getValue(keyName);
 	}
 	
 	// Get the number of seconds to wait after the action is executed

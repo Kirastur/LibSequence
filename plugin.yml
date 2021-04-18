@@ -1,19 +1,19 @@
 name: LibSequence
-description: Run a set of actions after time
-version: 1.3
+description: Run a set of actions after time. Extendable scripting language. For Standalone and plugin-integration.
+version: 1.4
 authors: [Kirastur]
 website: https://www.spigotmc.org/resources/libsequence.90664
 
 api-version: 1.16
 load: POSTWORLD
 main: de.polarwolf.libsequence.main.Main
-softdepend: [PlaceholderAPI]
+softdepend: [WorldEdit, WorldGuard, PlaceholderAPI]
 
 commands:
   libsequence:
     description: Manage sequences
     permission: libsequence.command
-    usage: Syntax error! Use /<command> subcommand
+    usage: "Query a list of valid subcommands by using: /libsequence help"
 
 permissions:
   libsequence.command.*:

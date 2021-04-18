@@ -3,14 +3,12 @@ package de.polarwolf.libsequence.actions;
 import static de.polarwolf.libsequence.actions.LibSequenceActionErrors.*;
 
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 
-	public static final String KEYNAME_PERMISSION = "permission";
+	public static final String KEYNAME_PERMISSION = "include_permission";
 
 	public static final String KEYNAME_TITLE = "title";
 	public static final String KEYNAME_SUBTITLE = "subtitle";
@@ -19,10 +17,6 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 	public static final String KEYNAME_STAY = "stay";
 	public static final String KEYNAME_FADEOUT = "fadeout";
 
-	public LibSequenceActionTitle(Plugin plugin) {
-		super(plugin);
-	}
-	
 	protected boolean verifyNumeric(String keyValue) {
 		if ((keyValue == null) || (keyValue.isEmpty())) {
 			return true;
@@ -62,12 +56,11 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 
 	@Override
 	public LibSequenceActionResult doExecute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) {
-		String sTitle = configStep.getValue(KEYNAME_TITLE);
-		String sSubtitle = configStep.getValue(KEYNAME_SUBTITLE);
 		String sFadein = configStep.getValue(KEYNAME_FADEIN);
 		String sStay = configStep.getValue(KEYNAME_STAY);
 		String sFadeout = configStep.getValue(KEYNAME_FADEOUT);
 		String permission = configStep.getValue(KEYNAME_PERMISSION);
+		permission = sequence.resolvePlaceholder(permission);
 		
 		int iFadein = 10;
 		int iStay = 70;
@@ -85,16 +78,16 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 			iFadeout = Integer.parseUnsignedInt(sFadeout);
 		}
 		
-		if (sTitle != null) {
-			sTitle = sequence.resolvePlaceholder(sTitle);
-		}
-		
-		if (sSubtitle != null) {
-			sSubtitle = sequence.resolvePlaceholder(sSubtitle);
-		}
 
-		for (Player player : plugin.getServer().getOnlinePlayers()) {
+		for (Player player : sequence.getPlugin().getServer().getOnlinePlayers()) {
 			if (checkPermission(player, permission)) {
+
+				String sTitle = configStep.getValueLocalized(KEYNAME_TITLE, player.getLocale());
+				sTitle = sequence.resolvePlaceholder(sTitle);
+				
+				String sSubtitle = configStep.getValueLocalized(KEYNAME_SUBTITLE, player.getLocale());
+				sSubtitle = sequence.resolvePlaceholder(sSubtitle);
+
 				player.sendTitle(sTitle, sSubtitle, iFadein, iStay, iFadeout);
 			}
 		}

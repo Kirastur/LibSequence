@@ -49,7 +49,7 @@ public final class LibSequenceController {
 	}
 
  	public LibSequenceConfigResult reload() {
- 		return sequencer.reloadSection(callback);
+ 		return sequencer.loadSection(callback);
  	}
  
 }

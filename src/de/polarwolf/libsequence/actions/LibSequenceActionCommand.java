@@ -4,8 +4,6 @@ import static de.polarwolf.libsequence.actions.LibSequenceActionErrors.*;
 
 import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.Plugin;
-
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
@@ -16,10 +14,6 @@ public class LibSequenceActionCommand extends LibSequenceActionGeneric {
 	public static final String SENDER_CONSOLE = "console";
 	public static final String SENDER_INITIATOR = "initiator";
 	public static final String USERERROR_NO_TARGET_FOUND = "no target found";
-
-	public LibSequenceActionCommand(Plugin plugin) {
-		super(plugin);
-	}
 
 	@Override
     public LibSequenceActionResult checkSyntax(LibSequenceConfigStep configStep) {
@@ -42,13 +36,13 @@ public class LibSequenceActionCommand extends LibSequenceActionGeneric {
     	
     	command = sequence.resolvePlaceholder(command);
     	
-		sender = plugin.getServer().getConsoleSender();
+		sender = sequence.getPlugin().getServer().getConsoleSender();
     	if ((senderType != null) && senderType.equalsIgnoreCase(SENDER_INITIATOR) && (sequence.getRunOptions().getInitiator() != null)) {
     		sender = sequence.getRunOptions().getInitiator();
     	}
 
     	try {
-			boolean result = plugin.getServer().dispatchCommand(sender, command);
+			boolean result = sequence.getPlugin().getServer().dispatchCommand(sender, command);
 			if (!result) {
 		    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_USER_DEFINED_ERROR, USERERROR_NO_TARGET_FOUND);
 			}

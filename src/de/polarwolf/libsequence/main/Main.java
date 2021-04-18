@@ -11,6 +11,7 @@ import de.polarwolf.libsequence.callback.LibSequenceCallbackGeneric;
 import de.polarwolf.libsequence.commands.LibSequenceCommand;
 import de.polarwolf.libsequence.commands.LibSequenceCommandCompleter;
 import de.polarwolf.libsequence.config.LibSequenceConfigResult;
+import de.polarwolf.libsequence.orchestrator.LibSequenceStartOptions;
 
 public final class Main extends JavaPlugin {
 	
@@ -25,24 +26,34 @@ public final class Main extends JavaPlugin {
 		boolean startupEnableCommands = getConfig().getBoolean("startup.enableCommands");
 		boolean startupEnableControlAPI = getConfig().getBoolean("startup.enableControlAPI");
 		boolean startupEnableSequencerAPI = getConfig().getBoolean("startup.enableSequencerAPI");
-		boolean commandsEnableCommandAction = getConfig().getBoolean("commands.enableCommandAction");
-		boolean commandsEnableChainEvents = getConfig().getBoolean("commands.enableChainEvents");
-								
+		
 		// If no modules should be activated => goto passive mode
 		if ((!startupEnableCommands) && (!startupEnableControlAPI) && (!startupEnableSequencerAPI)) {
 			getLogger().info("LibSequence is in passive mode. Only private sequencers are possible");
 			return;
 		}
 
-		// Create my personal callback, use default for all settings
-		LibSequenceCallback callback = new LibSequenceCallbackGeneric(this);
+		// Start Sequencer
+		LibSequenceStartOptions startOptions = new LibSequenceStartOptions();
+		startOptions.setOption(LibSequenceStartOptions.OPTION_INCLUDE_COMMAND, getConfig().getBoolean("orchestrator.enableCommandAction", true));
+		startOptions.setOption(LibSequenceStartOptions.OPTION_ENABLE_CHAIN_EVENTS, getConfig().getBoolean("orchestrator.enableChainEvents", true));
+		LibSequenceSequencer sequencer = new LibSequenceSequencer(this, startOptions);
+								
+		// Print Info about integrations
+		if (sequencer.hasInterationWorldguard()) {
+			getLogger().info("Link to WorldGuard established");			
+		}
+		if (sequencer.hasIntegrationPlaceholderAPI()) {
+			getLogger().info("Link to PlaceholderAPI established");			
+		}
 		
-		// Startup engine
-		LibSequenceSequencer sequencer = new LibSequenceSequencer(this, commandsEnableCommandAction, commandsEnableChainEvents);
+
+		// Start Controller
+		LibSequenceCallback callback = new LibSequenceCallbackGeneric(this, getConfig().getBoolean("controller.enableDebugOutput", false));
 		LibSequenceController controller = new LibSequenceController(sequencer, callback);
 		
 		// Load sequences from config
-		LibSequenceConfigResult configResult = sequencer.addSection(callback);
+		LibSequenceConfigResult configResult = sequencer.loadSection(callback);
 		if (configResult.hasError()) {
 			getLogger().warning(configResult.toString());
 		}
@@ -68,7 +79,7 @@ public final class Main extends JavaPlugin {
 			controller=null;
 		}
 		
-		// create API and provider
+		// Create API and Provider
 		LibSequenceAPI lsAPI = new LibSequenceAPI(sequencer, controller);
 		LibSequenceProvider.setAPI(lsAPI);
 		

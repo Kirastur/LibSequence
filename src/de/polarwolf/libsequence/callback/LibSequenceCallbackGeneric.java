@@ -16,9 +16,16 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	private static final String SECTION_NAME_SEQUENCES = "sequences";
 	
 	protected final Plugin plugin;
+	protected final boolean enableConsoleNotifications;
 	
 	public LibSequenceCallbackGeneric(Plugin plugin) {
 		this.plugin=plugin;
+		this.enableConsoleNotifications = false;
+	}
+	
+	public LibSequenceCallbackGeneric(Plugin plugin, boolean enableConsoleNotifications) {
+		this.plugin=plugin;
+		this.enableConsoleNotifications = enableConsoleNotifications;
 	}
 	
 	// Overwrite this if you want to change the name of the section in the config-file where the sections are defined
@@ -54,15 +61,17 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	// No need to overwrite this
 	// This is just because the Lib itself is not aware of the plugin  
 	@Override
-	public BukkitTask scheduleTask (BukkitRunnable task, int wait) {
+	public final BukkitTask scheduleTask (BukkitRunnable task, int wait) {
 		return task.runTaskLater(plugin, wait);
 	}
 	
 	// Overwrite this for custom message handling
 	// Per default all is written to the console
 	public void printSequenceMessage(LibSequenceRunningSequence sequence, String message) {
-		plugin.getLogger().info("Sequence "+sequence.getName()+" "+message);
-			}
+		if (enableConsoleNotifications) {
+			plugin.getLogger().info("Sequence "+sequence.getName()+" "+message);
+		}
+	}
 	
 	@Override
 	public void debugSequenceStarted(LibSequenceRunningSequence sequence) {

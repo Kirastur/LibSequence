@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
-
 import org.bukkit.configuration.ConfigurationSection;
 
 import de.polarwolf.libsequence.actions.LibSequenceActionValidator;
@@ -30,14 +28,14 @@ public class LibSequenceConfigSection {
 	
 	protected final Set<LibSequenceConfigSequence> sequences = new HashSet<>();
 	
-	public LibSequenceConfigSection(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, @Nonnull ConfigurationSection config) {
+	public LibSequenceConfigSection(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, ConfigurationSection config) {
 		this.callback=callback;
 		this.actionValidator=actionValidator;
 		
 		sequenceWithSyntaxError=loadSequencesFromConfig(config);
 	}
 	
-	public LibSequenceConfigSection(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, @Nonnull Map<String,List<Map<String,String>>> config) {
+	public LibSequenceConfigSection(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, Map<String,List<Map<String,String>>> config) {
 		this.callback=callback;
 		this.actionValidator=actionValidator;
 
