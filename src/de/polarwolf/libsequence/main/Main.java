@@ -40,7 +40,7 @@ public final class Main extends JavaPlugin {
 		LibSequenceSequencer sequencer = new LibSequenceSequencer(this, startOptions);
 								
 		// Print Info about integrations
-		if (sequencer.hasInterationWorldguard()) {
+		if (sequencer.hasIntegrationWorldguard()) {
 			getLogger().info("Link to WorldGuard established");			
 		}
 		if (sequencer.hasIntegrationPlaceholderAPI()) {

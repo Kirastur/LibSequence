@@ -33,7 +33,7 @@ public class LibSequenceSequencer {
 		return orchestrator.getIntegrationManager().hasPlaceholderAPI();		
 	}
 	
-	public boolean hasInterationWorldguard() {
+	public boolean hasIntegrationWorldguard() {
 		return orchestrator.getIntegrationManager().hasWorldguard();		
 	}
 
