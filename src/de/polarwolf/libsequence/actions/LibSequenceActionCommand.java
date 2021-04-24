@@ -19,13 +19,13 @@ public class LibSequenceActionCommand extends LibSequenceActionGeneric {
     public LibSequenceActionResult checkSyntax(LibSequenceConfigStep configStep) {
     	String command=configStep.getValue(KEYNAME_COMMAND);
     	if (command==null) {
-    		return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_MISSING_ATTRIBUTE, KEYNAME_COMMAND);
+    		return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_MISSING_ATTRIBUTE, KEYNAME_COMMAND, null);
     	}
     	String senderType=configStep.getValue(KEYNAME_SENDER);
    		if (!((senderType == null) || senderType.isEmpty() || senderType.equalsIgnoreCase(SENDER_CONSOLE) || senderType.equalsIgnoreCase(SENDER_INITIATOR))) {  
-       		return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_UNKNOWN_VALUE, KEYNAME_SENDER + ": " + senderType);
+       		return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_UNKNOWN_VALUE, KEYNAME_SENDER + ": " + senderType, null);
     	}
-   		return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_OK, null);
+   		return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_OK, null, null);
     }
 
 	@Override
@@ -44,12 +44,12 @@ public class LibSequenceActionCommand extends LibSequenceActionGeneric {
     	try {
 			boolean result = sequence.getPlugin().getServer().dispatchCommand(sender, command);
 			if (!result) {
-		    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_USER_DEFINED_ERROR, USERERROR_NO_TARGET_FOUND);
+		    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_USER_DEFINED_ERROR, USERERROR_NO_TARGET_FOUND, null);
 			}
 		} catch (CommandException e) {
-	    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_EXCEPTION, e.getMessage());
+	    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_EXCEPTION, e.getMessage(), null);
 		}
-    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_OK, null);
+    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_OK, null, null);
 	}
 	
 }

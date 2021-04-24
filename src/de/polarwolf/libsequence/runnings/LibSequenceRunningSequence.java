@@ -41,11 +41,10 @@ public class LibSequenceRunningSequence {
 		this.runManager=runManager;
 		this.configSequence=configSequence;
 		this.runOptions=runOptions;
-		runManagerOnInit();
+		onInit();
 		currentTask = createScheduledTask(1);
 		// Bukkit runTaskLater return value is Nonnull
 		plugin = currentTask.getOwner();			
-		callback.debugSequenceStarted(this);
 	}
 	
 	public boolean isCancelled() {
@@ -86,15 +85,18 @@ public class LibSequenceRunningSequence {
 		return runManager.doExecute(this, configStep);
 	}
 	
-	protected void runManagerOnInit() {
+	protected void onInit() {
 		runManager.onInit(this);	
+		callback.debugSequenceStarted(this);
 	}
 	
-	protected void runManagerOnCancel() {
+	protected void onCancel() {
+		callback.debugSequenceCancelled(this);
 		runManager.onCancel(this);	
 	}
 
-	protected void runManagerOnFinish() {
+	protected void onFinish() {
+		callback.debugSequenceFinished(this);
 		runManager.onFinish(this);	
 	}
 	
@@ -110,6 +112,9 @@ public class LibSequenceRunningSequence {
 		}
 		bCancel= true;
 		
+		// Yes, this is useless because if the task does not exists
+		// the cancel() creates an exception which is handled by the "finally",
+		// but I don't like that way
 		if (currentTask==null) {
 			handleEndOfSequence();
 			return;
@@ -118,14 +123,17 @@ public class LibSequenceRunningSequence {
 		try {
 			currentTask.cancel();
 		} finally {
+			currentTask = null;
 			handleEndOfSequence();
 		}
 	}
 
 	protected void handleNextStep() {
 
-		// check if sequence is cancelled during sleep
+		// Cleanup the reference to the Bukkit runTasLaterk object
 		currentTask=null;
+
+		// check if sequence is cancelled during sleep
 		if (isCancelled() || isFinished()) {
 			handleEndOfSequence();
 			return;
@@ -169,13 +177,10 @@ public class LibSequenceRunningSequence {
 		}
 		bFinish=true;
 		if (bCancel) {
-			runManagerOnCancel();
-			callback.debugSequenceCancelled(this);
+			onCancel();
 		} else {
-			runManagerOnFinish();
-			callback.debugSequenceFinished(this);
+			onFinish();
 		}
-		runManager = null;
 	}
 	
 }

@@ -14,10 +14,10 @@ public class LibSequenceRunOptions {
 	public static final String RUNOPTION_NAME = "NAME";
 	public static final String RUNOPTION_PLAYER = "PLAYER";
 	
+	private List<String> authorizationKeys = new ArrayList<>();
+
 	protected Map<String,String> placeholders = new HashMap<>();
-	protected List<String> authorizationKeys = new ArrayList<>();
 	protected CommandSender initiator;
-	protected Player chainPlayer;
 	protected boolean singleton = false;
 	
 	public void addPlaceholder (String name, String value) {

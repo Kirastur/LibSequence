@@ -38,13 +38,13 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 		String sFadeout = configStep.getValue(KEYNAME_FADEOUT);
 		
 		if ((sTitle==null) && (sSubtitle==null)) {			
-	    	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_MISSING_ATTRIBUTE, "'title' or 'subitle' must be defined");
+	    	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_MISSING_ATTRIBUTE, "'title' or 'subitle' must be defined", null);
 		}
 		
 		if ((!verifyNumeric(sFadein)) || (!verifyNumeric(sStay)) || (!verifyNumeric(sFadeout))) {
-	    	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_EXCEPTION, "Attribute must be numeric");
+	    	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_EXCEPTION, "Attribute must be numeric", null);
 		}
-    	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_OK, null);
+    	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_OK, null, null);
 	}
 
 	protected boolean checkPermission(Player player, String permission) {
@@ -92,7 +92,7 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 			}
 		}
 		
-    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_OK, null);
+    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_OK, null, null);
 	}
 
 }

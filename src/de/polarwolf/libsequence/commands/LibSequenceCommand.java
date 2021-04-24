@@ -24,6 +24,8 @@ public class LibSequenceCommand implements CommandExecutor {
 	private final Main main;
 	private final LibSequenceController controller;
 	
+	public static final String MSG_ERROR = "ERROR";
+	
 	public LibSequenceCommand(Main main, LibSequenceController controller) {
 		this.main = main;
 		this.controller=controller;
@@ -42,6 +44,10 @@ public class LibSequenceCommand implements CommandExecutor {
 			messageText = messageText + " "+ additionalInfo;
 		}
 		sender.sendMessage(messageText);
+	}
+	
+	protected void printError(CommandSender sender, String errorText) {
+		sender.sendMessage(MSG_ERROR + " "  + errorText);
 	}
 
 	protected boolean checkNrOfArguments1 (CommandSender sender, int argLength) {
@@ -64,48 +70,6 @@ public class LibSequenceCommand implements CommandExecutor {
 		return true;
 	}
 
-	@Override
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		if (args.length==0) {
-			printMessage (sender, MSG_OPTION_NAME_MISSING, null);
-			return true;
-		}
-		String subCommand=args[0];
-		if (subCommand.equalsIgnoreCase("help")) {
-			cmdHelp(sender);
-			return true;
-		}
-		if (!listAllCommands().contains(subCommand)) {
-			printMessage (sender, MSG_UNKNOWN_OPTION, null);
-			return true;
-		}
-		if (!hasCommandPermission(sender, subCommand)) {
-			printMessage(sender, MSG_NO_OPTION_PERMISSION, null);
-			return true;
-		}
-		if (subCommand.equalsIgnoreCase("start")) {
-			cmdStart(sender, args);
-			return true;
-		}
-		if (subCommand.equalsIgnoreCase("cancel")) {
-			cmdCancel(sender, args);
-			return true;
-		}
-		if (subCommand.equalsIgnoreCase("list")) {
-			cmdList(sender, args);
-			return true;
-		}
-		if (subCommand.equalsIgnoreCase("info")) {
-			cmdInfo(sender, args);
-			return true;
-		}
-		if (subCommand.equalsIgnoreCase("reload")) {
-			cmdReload(sender, args);
-			return true;
-		}
-		return false;
-	}
-	
 	protected List<String> listAllCommands() {
 		ArrayList<String> cmds = new ArrayList<>();
 		cmds.add("start");
@@ -179,7 +143,7 @@ public class LibSequenceCommand implements CommandExecutor {
 		runOptions.setInitiator(sender);
 		LibSequenceRunResult result = controller.execute(sequenceName, runOptions);
 		if (result.hasError()) {
-			sender.sendMessage(result.toString());
+			printError(sender,  result.toString());
 			return;
 		}
 		printMessage(sender, MSG_SEQUENCE_STARTED, null);
@@ -200,7 +164,7 @@ public class LibSequenceCommand implements CommandExecutor {
 			return;
 		}
 		if (result.hasError()) {
-			sender.sendMessage(result.toString());
+			printError(sender,  result.toString());
 			return;
 		}
 		printMessage(sender, MSG_SEQUENCE_CANCELLED, null);
@@ -236,10 +200,52 @@ public class LibSequenceCommand implements CommandExecutor {
 		}
 		LibSequenceConfigResult result = controller.reload();
 		if (result.hasError()) {
-			sender.sendMessage(result.toString());
+			printError(sender,  result.toString());
 			return;
 		}
 		printMessage(sender, MSG_RELOAD, null);
 	}
 
+	@Override
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+		if (args.length==0) {
+			printMessage (sender, MSG_OPTION_NAME_MISSING, null);
+			return true;
+		}
+		String subCommand=args[0];
+		if (subCommand.equalsIgnoreCase("help")) {
+			cmdHelp(sender);
+			return true;
+		}
+		if (!listAllCommands().contains(subCommand)) {
+			printMessage (sender, MSG_UNKNOWN_OPTION, null);
+			return true;
+		}
+		if (!hasCommandPermission(sender, subCommand)) {
+			printMessage(sender, MSG_NO_OPTION_PERMISSION, null);
+			return true;
+		}
+		if (subCommand.equalsIgnoreCase("start")) {
+			cmdStart(sender, args);
+			return true;
+		}
+		if (subCommand.equalsIgnoreCase("cancel")) {
+			cmdCancel(sender, args);
+			return true;
+		}
+		if (subCommand.equalsIgnoreCase("list")) {
+			cmdList(sender, args);
+			return true;
+		}
+		if (subCommand.equalsIgnoreCase("info")) {
+			cmdInfo(sender, args);
+			return true;
+		}
+		if (subCommand.equalsIgnoreCase("reload")) {
+			cmdReload(sender, args);
+			return true;
+		}
+		return false;
+	}
+	
 }

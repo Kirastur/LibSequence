@@ -15,5 +15,9 @@ public final class LibSequenceActionValidator {
 	public LibSequenceActionResult validateAction(LibSequenceConfigStep configStep) {
 		return actionManager.validateAction(configStep);
 	}
+	
+	public boolean isSameInstance(LibSequenceActionValidator actionValidatorToCompare) {
+		return (actionValidatorToCompare.actionManager == this.actionManager);
+	}
 
 }

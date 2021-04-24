@@ -7,6 +7,8 @@ import org.bukkit.scheduler.BukkitTask;
 
 import de.polarwolf.libsequence.actions.LibSequenceActionResult;
 import de.polarwolf.libsequence.actions.LibSequenceActionValidator;
+import de.polarwolf.libsequence.checks.LibSequenceCheckErrors;
+import de.polarwolf.libsequence.checks.LibSequenceCheckResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigSection;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
@@ -17,16 +19,28 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	
 	protected final Plugin plugin;
 	protected final boolean enableConsoleNotifications;
+
 	
+	//
+	// Object creation
+	//
+	
+	// 1. Option: Create the object with all default settings
 	public LibSequenceCallbackGeneric(Plugin plugin) {
 		this.plugin=plugin;
 		this.enableConsoleNotifications = false;
 	}
 	
+	// 2. Option: Create the object and select if you want to printout debug messages to server console
 	public LibSequenceCallbackGeneric(Plugin plugin, boolean enableConsoleNotifications) {
 		this.plugin=plugin;
 		this.enableConsoleNotifications = enableConsoleNotifications;
 	}
+	
+	
+	//
+	// Load sequences
+	//
 	
 	// Overwrite this if you want to change the name of the section in the config-file where the sections are defined
 	protected String getSectionIdentifier() {
@@ -53,20 +67,52 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 		return new LibSequenceConfigSection(this, actionValidator, config);
 	}
 	
-	// Override this for custom error handling
-	public void onExecutionError (LibSequenceRunningSequence secuence, LibSequenceActionResult actionError) {
-		plugin.getLogger().warning(actionError.toString());		
+
+	//
+	// Error handling
+	//
+	
+	// Print a notification if a check-step returns a FALSE
+	public void printCheckFailed(String messageText) {
+		plugin.getLogger().info("CHECK " + messageText);				
 	}
+	
+	// Print a warning if an error occurs during sequence execution
+	public void printError(String errorText) {
+		plugin.getLogger().warning("ERROR "  + errorText);
+		
+	}
+		
+	// Override this for custom error handling
+	public void onExecutionError(LibSequenceRunningSequence secuence, LibSequenceActionResult actionError) {
+		if (actionError.getSubResult() instanceof LibSequenceCheckResult) {
+			LibSequenceCheckResult checkError = (LibSequenceCheckResult)actionError.getSubResult();
+			if (checkError.errorCode == LibSequenceCheckErrors.LSCERR_FALSE) {
+				printCheckFailed(actionError.toString());
+				return;
+			}
+		}
+		printError(actionError.toString());
+	}
+	
+
+	//
+	// Task creation
+	//
 	
 	// No need to overwrite this
 	// This is just because the Lib itself is not aware of the plugin  
 	@Override
-	public final BukkitTask scheduleTask (BukkitRunnable task, int wait) {
+	public final BukkitTask scheduleTask(BukkitRunnable task, int wait) {
 		return task.runTaskLater(plugin, wait);
 	}
 	
-	// Overwrite this for custom message handling
-	// Per default all is written to the console
+	
+	//
+	// Debug messages
+	//
+	
+	// Per default all is written to the server console
 	public void printSequenceMessage(LibSequenceRunningSequence sequence, String message) {
 		if (enableConsoleNotifications) {
 			plugin.getLogger().info("Sequence "+sequence.getName()+" "+message);

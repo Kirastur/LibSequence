@@ -1,5 +1,6 @@
 package de.polarwolf.libsequence.main;
 
+import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import de.polarwolf.libsequence.api.LibSequenceAPI;
@@ -55,7 +56,8 @@ public final class Main extends JavaPlugin {
 		// Load sequences from config
 		LibSequenceConfigResult configResult = sequencer.loadSection(callback);
 		if (configResult.hasError()) {
-			getLogger().warning(configResult.toString());
+			getServer().getConsoleSender().sendMessage(ChatColor.RED + "ERROR " + configResult.toString());
+			getLogger().warning("Cannot load sequences");
 		}
 
 		// Register minecraft commands

@@ -2,43 +2,55 @@ package de.polarwolf.libsequence.actions;
 
 import static de.polarwolf.libsequence.actions.LibSequenceActionErrors.*;
 
+import de.polarwolf.libsequence.checks.LibSequenceCheckResult;
+import de.polarwolf.libsequence.result.LibSequenceResult;
+
 //This class is expected to be final
 //Please don't change it, even if you implement a custom ActionManager
 //You can formatting and localization of the Error-Text in the callback object
-public final class LibSequenceActionResult {
+public final class LibSequenceActionResult extends LibSequenceResult{
 	
 	public final String sequenceName;
 	public final String actionName;
 	public final LibSequenceActionErrors errorCode; 
-	public final String errorSubText;
-
-	public LibSequenceActionResult(String sequenceName, String actionName, LibSequenceActionErrors errorCode,  String errorSubText) {
+	public final String errorDetailText;
+	
+	public LibSequenceActionResult(String sequenceName, String actionName, LibSequenceActionErrors errorCode,  String errorDetailText, LibSequenceCheckResult checkResult) {
+		super(checkResult);
 		this.sequenceName=sequenceName;
 		this.actionName=actionName;
 		this.errorCode=errorCode;
-		this.errorSubText=errorSubText;
-	}
-
-	public boolean hasError() {
-		return errorCode!=LSAERR_OK;
+		this.errorDetailText=errorDetailText;
 	}
 
 	@Override
-	public String toString() {
-		String s = actionName;
-		if (s==null) {
-			s = "";
-		} else {
-			s = s + ": ";
+	public boolean hasError() {
+		return errorCode!=LSAERR_OK;
+	}
+	
+	@Override
+	public String getLabel() {
+		return errorCode.toString();
+	}
+	
+	@Override
+	protected String getErrorText() {
+		
+		String errorText = getLabel();
+
+		if ((actionName != null) && (!actionName.isEmpty())) {
+			errorText = actionName + ": " + errorText; 
 		}
-		s = s + errorCode.toString();
-		if (errorSubText!=null) {
-			s = s + ": " + errorSubText; 
-		}
+
 		if ((sequenceName != null) && (!sequenceName.isEmpty())) {
-			s = s + " (" + sequenceName + ")";
+			errorText = sequenceName + ": " + errorText;
 		}
-		return s;
+
+		if ((errorDetailText != null) && (!errorDetailText.isEmpty())) {
+			errorText = errorText + ": " +  errorDetailText; 
+		}
+
+		return errorText; 
 	}
 
 }

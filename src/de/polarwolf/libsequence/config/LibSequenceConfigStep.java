@@ -8,6 +8,7 @@ package de.polarwolf.libsequence.config;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -79,8 +80,8 @@ public class LibSequenceConfigStep {
 	
 	// We use this check for the ActionManager to verify that the step belongs to the correct sequencer
 	// This is not a security feature because the ActionValidator is public
-	public boolean verifyActionValidator(LibSequenceActionValidator actionValidatorToTest) {
-		return (actionValidatorToTest==actionValidator);
+	public final boolean isSameInstance(LibSequenceActionValidator actionValidatorToTest) {
+		return actionValidator.isSameInstance(actionValidatorToTest);
 	}
 		
 	public String getSequenceName() {
@@ -134,6 +135,10 @@ public class LibSequenceConfigStep {
 	// The Action is the key-feature of each step
 	public String getActionName() {
 		return getValue(KEYNAME_ACTION);
+	}
+	
+	public Set<String> getKeys() {
+		return stepData.keySet();
 	}
 
 	// The syntax check is called during initial section load and before every run
