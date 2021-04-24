@@ -11,6 +11,8 @@ import de.polarwolf.libsequence.actions.LibSequenceActionResult;
 import de.polarwolf.libsequence.actions.LibSequenceActionValidator;
 import de.polarwolf.libsequence.callback.LibSequenceCallback;
 import de.polarwolf.libsequence.chains.LibSequenceChain;
+import de.polarwolf.libsequence.checks.LibSequenceCheck;
+import de.polarwolf.libsequence.checks.LibSequenceCheckResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigSequence;
 import de.polarwolf.libsequence.orchestrator.LibSequenceOrchestrator;
@@ -114,6 +116,11 @@ public class LibSequenceSequencer {
 	// PlaceholderManager
 	public void registerPlaceholder(LibSequencePlaceholder placeholder) {
 		orchestrator.getPlaceholderManager().registerPlaceholder(placeholder);
+	}
+	
+	// CheckManager
+	public LibSequenceCheckResult registerCheck(String checkName, LibSequenceCheck check) {
+		return orchestrator.getCheckManager().registerCheck(checkName, check);
 	}
 
 	
