@@ -10,10 +10,12 @@ public class LibSequenceStartOptions {
 	
 	protected Map<String,Boolean> options = new HashMap<>();
 	
+
 	public Boolean getOption(String name) {
 		return options.get(name);
 	}
 	
+
 	public void setOption(String name, boolean value) {
 		options.put(name, value);
 	}

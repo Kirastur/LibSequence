@@ -2,13 +2,13 @@ package de.polarwolf.libsequence.actions;
 
 import static de.polarwolf.libsequence.actions.LibSequenceActionErrors.*;
 
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
+import de.polarwolf.libsequence.includes.LibSequenceIncludeResult;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public class LibSequenceActionTitle extends LibSequenceActionGeneric {
-
-	public static final String KEYNAME_PERMISSION = "include_permission";
 
 	public static final String KEYNAME_TITLE = "title";
 	public static final String KEYNAME_SUBTITLE = "subtitle";
@@ -16,6 +16,7 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 	public static final String KEYNAME_FADEIN = "fadein";
 	public static final String KEYNAME_STAY = "stay";
 	public static final String KEYNAME_FADEOUT = "fadeout";
+
 
 	protected boolean verifyNumeric(String keyValue) {
 		if ((keyValue == null) || (keyValue.isEmpty())) {
@@ -28,6 +29,7 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 		}
 		return true;
 	}
+
 
 	@Override
     public LibSequenceActionResult checkSyntax(LibSequenceConfigStep configStep) {
@@ -44,23 +46,16 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 		if ((!verifyNumeric(sFadein)) || (!verifyNumeric(sStay)) || (!verifyNumeric(sFadeout))) {
 	    	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_EXCEPTION, "Attribute must be numeric", null);
 		}
-    	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_OK, null, null);
+
+		return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_OK, null, null);
 	}
 
-	protected boolean checkPermission(Player player, String permission) {
-		if ((permission == null) || (permission.isEmpty())) {
-			return true;
-		}
-		return player.hasPermission(permission);
-	}
 
 	@Override
 	public LibSequenceActionResult doExecute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) {
 		String sFadein = configStep.getValue(KEYNAME_FADEIN);
 		String sStay = configStep.getValue(KEYNAME_STAY);
 		String sFadeout = configStep.getValue(KEYNAME_FADEOUT);
-		String permission = configStep.getValue(KEYNAME_PERMISSION);
-		permission = sequence.resolvePlaceholder(permission);
 		
 		int iFadein = 10;
 		int iStay = 70;
@@ -78,20 +73,28 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 			iFadeout = Integer.parseUnsignedInt(sFadeout);
 		}
 		
+		LibSequenceIncludeResult includeResult = sequence.performIncludes(configStep);
+		
+		if (includeResult.getSenders() != null) {
+			for (CommandSender sender : includeResult.getSenders()) {
+				if (sender instanceof Player) {
+					Player player = (Player)sender;
+					String sTitle = configStep.getValueLocalized(KEYNAME_TITLE, player.getLocale());
+					sTitle = sequence.resolvePlaceholder(sTitle);
+					
+					String sSubtitle = configStep.getValueLocalized(KEYNAME_SUBTITLE, player.getLocale());
+					sSubtitle = sequence.resolvePlaceholder(sSubtitle);
 
-		for (Player player : sequence.getPlugin().getServer().getOnlinePlayers()) {
-			if (checkPermission(player, permission)) {
-
-				String sTitle = configStep.getValueLocalized(KEYNAME_TITLE, player.getLocale());
-				sTitle = sequence.resolvePlaceholder(sTitle);
-				
-				String sSubtitle = configStep.getValueLocalized(KEYNAME_SUBTITLE, player.getLocale());
-				sSubtitle = sequence.resolvePlaceholder(sSubtitle);
-
-				player.sendTitle(sTitle, sSubtitle, iFadein, iStay, iFadeout);
+					player.sendTitle(sTitle, sSubtitle, iFadein, iStay, iFadeout);
+				}
 			}
 		}
 		
+		if (includeResult.hasError()) {
+			includeResult.overwriteSenders(null);
+	    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_USER_DEFINED_ERROR, "include failed", includeResult);
+		}
+
     	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_OK, null, null);
 	}
 

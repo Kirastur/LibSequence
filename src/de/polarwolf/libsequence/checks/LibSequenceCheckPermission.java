@@ -1,22 +1,22 @@
 package de.polarwolf.libsequence.checks;
 
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.Plugin;
+import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
-import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
 import static de.polarwolf.libsequence.checks.LibSequenceCheckErrors.*;
 
 public class LibSequenceCheckPermission implements LibSequenceCheck {
 
 	@Override
-	public LibSequenceCheckResult performCheck (String checkName, String valueText, Plugin plugin, LibSequenceRunOptions runOptions) {
-		if ((valueText == null) || (valueText.isEmpty())) {
+	public LibSequenceCheckResult performCheck (String checkName, String valueText, LibSequenceRunningSequence runningSequence) {
+		valueText = runningSequence.resolvePlaceholder(valueText);
+		if (valueText.isEmpty()) {
 			return new LibSequenceCheckResult(checkName, LSCERR_VALUE_MISSING, null);
 		}
 
-		CommandSender initiator = runOptions.getInitiator();
+		CommandSender initiator = runningSequence.getRunOptions().getInitiator();
 		if (initiator == null) {
-			initiator = plugin.getServer().getConsoleSender();
+			return new LibSequenceCheckResult(checkName, LSCERR_FALSE, "no initiator given");
 		}
 
 		if (initiator.hasPermission(valueText)) {

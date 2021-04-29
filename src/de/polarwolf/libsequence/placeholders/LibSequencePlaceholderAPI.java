@@ -10,9 +10,11 @@ public class LibSequencePlaceholderAPI implements LibSequencePlaceholder{
 	
 	protected final LibSequenceIntegrationPlaceholderAPI placeholderAPI;
 	
+
 	public LibSequencePlaceholderAPI (LibSequenceIntegrationPlaceholderAPI placeholderAPI) {
 		this.placeholderAPI = placeholderAPI;
 	}
+
 
 	@Override
 	public String resolvePlaceholders(String messageText, LibSequenceRunOptions runOptions) {
@@ -24,5 +26,5 @@ public class LibSequencePlaceholderAPI implements LibSequencePlaceholder{
 			return placeholderAPI.setPlaceholders(null, messageText);
 		}
 	}
-	
+
 }

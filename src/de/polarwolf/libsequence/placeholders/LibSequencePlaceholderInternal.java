@@ -4,6 +4,7 @@ import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
 
 public class LibSequencePlaceholderInternal implements LibSequencePlaceholder {
 	
+
 	@Override
 	public String resolvePlaceholders(String messageText, LibSequenceRunOptions runOptions) {
 		for (String placeholderName : runOptions.listPlaceholders()) {
@@ -13,5 +14,5 @@ public class LibSequencePlaceholderInternal implements LibSequencePlaceholder {
 		}
 		return messageText;
 	}
-
+	
 }

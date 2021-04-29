@@ -14,6 +14,7 @@ public class LibSequenceActionManager {
 
 	protected final Map<String, LibSequenceAction> actionMap = new HashMap <>();
 	
+
 	public boolean hasAction(String actionName) {
 		for (String actionKey: actionMap.keySet()) {
 			if (actionName.equals(actionKey)) {
@@ -23,6 +24,7 @@ public class LibSequenceActionManager {
 		return false;
 	}
 	
+
 	public LibSequenceActionResult registerAction(String actionName, LibSequenceAction action) {
 		if (hasAction(actionName)) {
 			return new LibSequenceActionResult(null, actionName, LSAERR_ACTION_ALREADY_EXISTS, null, null);
@@ -31,6 +33,7 @@ public class LibSequenceActionManager {
 		return new LibSequenceActionResult(null, actionName, LSAERR_OK, null, null);
 	}
 	
+
 	// We need to create a new ActionValidator every time
 	// to avoid java circular references.
 	// Compare them with actionValidator.isSameInstance
@@ -38,29 +41,34 @@ public class LibSequenceActionManager {
 		return new LibSequenceActionValidator(this);
 	}
 
+
 	public LibSequenceAction getActionByName (String actionName) {
 		return actionMap.get(actionName);
 	}
 	
+
 	public void onInit(LibSequenceRunningSequence sequence) {
 		for (LibSequenceAction action : actionMap.values()) {
 			action.onInit(sequence);
 		}
 	}
 	
+
 	public void onCancel(LibSequenceRunningSequence sequence) {
 		for (LibSequenceAction action : actionMap.values()) {
 			action.onCancel(sequence);
 		}
 	}
 
-    public void onFinish(LibSequenceRunningSequence sequence) {
+
+	public void onFinish(LibSequenceRunningSequence sequence) {
 		for (LibSequenceAction action : actionMap.values()) {
 			action.onFinish(sequence);
 		}
 	}
     
-    // We expect to have a valid actionName here
+
+	// We expect to have a valid actionName here
     // This must be done in the configStep syntaxCheck before calling this
 	// Check is done on Load and before sequence start 
     public LibSequenceActionResult validateAction(LibSequenceConfigStep configStep) {
@@ -71,6 +79,7 @@ public class LibSequenceActionManager {
     	return action.checkSyntax(configStep);
 	}
     
+
     public LibSequenceActionResult checkAuthorization(LibSequenceRunOptions runOptions, LibSequenceConfigSequence configSequence) {
     	for (int i=1; i<= configSequence.getSize(); i++) {
     		LibSequenceConfigStep configStep = configSequence.getStep(i);
@@ -80,14 +89,13 @@ public class LibSequenceActionManager {
         	}
         	if (!action.isAuthorized(runOptions, configStep)) {
     			return new LibSequenceActionResult(configSequence.getSequenceName(), configStep.getActionName(), LSAERR_NOT_AUTHORIZED, null, null);
-        	}
-    		
+        	}    		
     	}
     	return new LibSequenceActionResult(configSequence.getSequenceName(), null, LSAERR_OK, null, null);
-   	
     }
     
-	// First we must check if the sequence belongs to my instance
+
+    // First we must check if the sequence belongs to my instance
     // We expect a syntaxCheck() before, so we know the action is valid here
     // We expect authorization is done before, so we don't need to check here
 	public LibSequenceActionResult doExecute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) {
@@ -99,4 +107,3 @@ public class LibSequenceActionManager {
 	}
 	
 }
-

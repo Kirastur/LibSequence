@@ -4,10 +4,8 @@ import static de.polarwolf.libsequence.checks.LibSequenceCheckErrors.*;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-
 import de.polarwolf.libsequence.integrations.LibSequenceIntegrationWorldguard;
-import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
+import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public class LibSequenceCheckRegion implements LibSequenceCheck {
 	
@@ -18,12 +16,13 @@ public class LibSequenceCheckRegion implements LibSequenceCheck {
 	}
 
 	@Override
-	public LibSequenceCheckResult performCheck (String checkName, String valueText, Plugin plugin, LibSequenceRunOptions runOptions) {
-		if ((valueText == null) || (valueText.isEmpty())) {
+	public LibSequenceCheckResult performCheck (String checkName, String valueText, LibSequenceRunningSequence runningSequence) {
+		valueText = runningSequence.resolvePlaceholder(valueText);
+		if (valueText.isEmpty()) {
 			return new LibSequenceCheckResult(checkName, LSCERR_VALUE_MISSING, null);
 		}
 		
-		CommandSender initiator = runOptions.getInitiator();
+		CommandSender initiator = runningSequence.getRunOptions().getInitiator();
 		if (initiator == null) {
 			return new LibSequenceCheckResult(checkName, LSCERR_NOT_A_PLAYER, null);			
 		}
@@ -32,8 +31,8 @@ public class LibSequenceCheckRegion implements LibSequenceCheck {
 		}
 		Player player = (Player)initiator;
 
-    	int result = integrationWorldguard.testPlayer(player, valueText);
-    	switch(result) {
+    	int resultWG = integrationWorldguard.testPlayer(player, valueText);
+    	switch(resultWG) {
     		case LibSequenceIntegrationWorldguard.ERR_OK: return new LibSequenceCheckResult(checkName, LSCERR_OK, null);	
     		case LibSequenceIntegrationWorldguard.ERR_PLAYEROUTSIDE: return new LibSequenceCheckResult(checkName, LSCERR_FALSE, player.getName() + " is outside of " + valueText);
     		case LibSequenceIntegrationWorldguard.ERR_GENERIC: return new LibSequenceCheckResult(checkName, LSCERR_USER_DEFINED_ERROR, "generic region error");

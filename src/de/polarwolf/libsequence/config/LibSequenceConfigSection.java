@@ -28,6 +28,7 @@ public class LibSequenceConfigSection {
 	
 	protected final Set<LibSequenceConfigSequence> sequences = new HashSet<>();
 	
+
 	public LibSequenceConfigSection(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, ConfigurationSection config) {
 		this.callback=callback;
 		this.actionValidator=actionValidator;
@@ -35,12 +36,14 @@ public class LibSequenceConfigSection {
 		sequenceWithSyntaxError=loadSequencesFromConfig(config);
 	}
 	
+
 	public LibSequenceConfigSection(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, Map<String,List<Map<String,String>>> config) {
 		this.callback=callback;
 		this.actionValidator=actionValidator;
 
 		sequenceWithSyntaxError=loadSequencesFromMap(config);
 	}
+
 
 	protected String loadSequencesFromConfig(ConfigurationSection config) {
 		for (String sequenceName : config.getKeys(false)) {
@@ -54,6 +57,7 @@ public class LibSequenceConfigSection {
 		}
 		return null;
 	}
+
 
 	protected String loadSequencesFromMap (Map<String,List<Map<String,String>>> config) {
 		for (Entry<String,List<Map<String,String>>> sequence: config.entrySet()) {
@@ -69,6 +73,7 @@ public class LibSequenceConfigSection {
 		return null;
 	}
 
+
 	// You can only perform admin-operations on the section if you are the owner of the section
 	// Only the owner knows the callback-object, so we use this as authentication method
 	// So we have implemented a method to check this
@@ -78,10 +83,12 @@ public class LibSequenceConfigSection {
 		return callbackToCheck==callback;
 	}	
 
+
 	public int getSize() {
 		return sequences.size();
 	}
 	
+
 	public LibSequenceConfigSequence getSequence(String sequenceName) {
 		for (LibSequenceConfigSequence sequence : sequences) {
 			if (sequence.getSequenceName().equals(sequenceName)) {
@@ -91,6 +98,7 @@ public class LibSequenceConfigSection {
 		return null;
 	}
 
+
 	public Set<String> getSequenceKeys() {
 		Set<String> keySet = new HashSet<>();
 		for (LibSequenceConfigSequence sequence : sequences) {
@@ -99,6 +107,7 @@ public class LibSequenceConfigSection {
 		return keySet;
 	}
 	
+
 	// This method is final, so no one can override this to steal the securityToken
 	// This is needed because we have a loop which cycles through all sections to find the sequence fitting to the given securityToken
 	public final LibSequenceConfigSequence findSequence(String securityToken) {
@@ -110,6 +119,7 @@ public class LibSequenceConfigSection {
 		return null;
 	}
 	
+
 	public LibSequenceConfigResult checkSyntax() {
 		if (sequenceWithSyntaxError!=null) {
 			return new LibSequenceConfigResult(sequenceWithSyntaxError, 0, LSCERR_SEQUENCE, null, null);

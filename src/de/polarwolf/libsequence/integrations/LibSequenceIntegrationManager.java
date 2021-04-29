@@ -7,6 +7,7 @@ public class LibSequenceIntegrationManager {
 	protected final LibSequenceIntegrationPlaceholderAPI integrationPlaceholderAPI;
 	protected final LibSequenceIntegrationWorldguard integrationWorldguard;
 	
+
 	public LibSequenceIntegrationManager(Plugin plugin) {
 		if (plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
 			integrationPlaceholderAPI = new LibSequenceIntegrationPlaceholderAPI();
@@ -20,18 +21,22 @@ public class LibSequenceIntegrationManager {
 		}
 	}
 	
+
 	public boolean hasPlaceholderAPI() {
 		return (integrationPlaceholderAPI != null);		
 	}
 	
+
 	public boolean hasWorldguard() {
 		return (integrationWorldguard != null);		
 	}
+
 
 	public LibSequenceIntegrationPlaceholderAPI getPlaceholderAPI() {
 		return integrationPlaceholderAPI;
 	}
 	
+
 	public LibSequenceIntegrationWorldguard getWorldguard() {
 		return integrationWorldguard;
 	}

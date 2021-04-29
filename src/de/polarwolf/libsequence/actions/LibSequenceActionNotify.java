@@ -2,14 +2,16 @@ package de.polarwolf.libsequence.actions;
 
 import static de.polarwolf.libsequence.actions.LibSequenceActionErrors.*;
 
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
+import de.polarwolf.libsequence.includes.LibSequenceIncludeResult;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public class LibSequenceActionNotify extends LibSequenceActionGeneric {
 
 	public static final String KEYNAME_MESSAGE = "message";
-	public static final String KEYNAME_PERMISSION = "include_permission";
+
 
 	@Override
     public LibSequenceActionResult checkSyntax(LibSequenceConfigStep configStep) {
@@ -20,25 +22,30 @@ public class LibSequenceActionNotify extends LibSequenceActionGeneric {
     	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_OK, null, null);
     }
 	
-	protected boolean checkPermission(Player player, String permission) {
-		if ((permission == null) || (permission.isEmpty())) {
-			return true;
-		}
-		return player.hasPermission(permission);
-	}
 
 	@Override
 	public LibSequenceActionResult doExecute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) {
-		String permission = configStep.getValue(KEYNAME_PERMISSION);
-		permission = sequence.resolvePlaceholder(permission);
-
-		for (Player player : sequence.getPlugin().getServer().getOnlinePlayers()) {
-			if (checkPermission(player, permission)) {
-				String messageText = configStep.getValueLocalized(KEYNAME_MESSAGE, player.getLocale());
+		LibSequenceIncludeResult includeResult = sequence.performIncludes(configStep);
+		
+		if (includeResult.getSenders() != null) {
+			for (CommandSender sender : includeResult.getSenders()) {
+				String messageText = "";
+				if (sender instanceof Player) {
+					Player player = (Player)sender;
+					messageText = configStep.getValueLocalized(KEYNAME_MESSAGE, player.getLocale());
+				} else { 
+					messageText = configStep.getValue(KEYNAME_MESSAGE);
+				}
 				messageText = sequence.resolvePlaceholder(messageText);
-				player.sendMessage(messageText);
+				sender.sendMessage(messageText);
 			}
 		}
+		
+		if (includeResult.hasError()) {
+			includeResult.overwriteSenders(null);
+	    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_USER_DEFINED_ERROR, "include failed", includeResult);
+		}
+
     	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_OK, null, null);
 	}
 

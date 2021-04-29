@@ -8,14 +8,17 @@ public final class LibSequenceActionValidator {
 
 	private final LibSequenceActionManager actionManager;
 	
+
 	public LibSequenceActionValidator(LibSequenceActionManager actionManager) {
 		this.actionManager=actionManager;
 	}
 	
+
 	public LibSequenceActionResult validateAction(LibSequenceConfigStep configStep) {
 		return actionManager.validateAction(configStep);
 	}
 	
+
 	public boolean isSameInstance(LibSequenceActionValidator actionValidatorToCompare) {
 		return (actionValidatorToCompare.actionManager == this.actionManager);
 	}

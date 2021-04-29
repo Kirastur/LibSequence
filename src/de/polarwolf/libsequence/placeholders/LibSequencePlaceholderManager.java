@@ -9,10 +9,12 @@ public class LibSequencePlaceholderManager {
 	
 	protected List<LibSequencePlaceholder> placeholders = new ArrayList<>();
 	
+
 	public void registerPlaceholder(LibSequencePlaceholder placeholder) {
 		placeholders.add(placeholder);
 	}
 	
+
 	public String resolvePlaceholder(String messageText, LibSequenceRunOptions runOptions) {
 		if (messageText == null) {
 			return null;

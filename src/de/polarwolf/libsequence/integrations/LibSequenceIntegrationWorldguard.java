@@ -18,6 +18,7 @@ public class LibSequenceIntegrationWorldguard {
 	public static final int ERR_NOWORLD = -2;
 	public static final int ERR_NOREGION = -3;
 	
+
 	protected RegionManager getRegionManager(World world) {
 		try {
 			return WorldGuard
@@ -30,6 +31,7 @@ public class LibSequenceIntegrationWorldguard {
 		}		
 	}
 	
+
 	protected ProtectedRegion getRegion(RegionManager regionManager, String regionName) {
 		try {
 			return regionManager.getRegion(regionName);
@@ -38,6 +40,7 @@ public class LibSequenceIntegrationWorldguard {
 		}		
 	}
 	
+
 	public int testPlayer(Player player, String regionName) {
 		if ((player == null) || (regionName == null) || (regionName.isEmpty())) {
 			return ERR_GENERIC;

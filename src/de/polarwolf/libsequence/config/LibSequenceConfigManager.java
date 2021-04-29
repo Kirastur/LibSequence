@@ -20,10 +20,12 @@ public class LibSequenceConfigManager {
 	
 	protected final Set<LibSequenceConfigSection> sections = new HashSet<>();
 	
+
 	public LibSequenceConfigManager(LibSequenceActionValidator actionValidator) {
 		this.actionValidator=actionValidator;
 	}
 	
+
 	// Find the section for a given callback
 	// Each section must have its own callback, so the response is unique
 	// Calling section.verifyAccess(config) is secure because this method is final 
@@ -36,6 +38,7 @@ public class LibSequenceConfigManager {
 		return null;		
 	}
 	
+
 	public LibSequenceConfigSequence findForeignSequence(String securityToken) {
 		for (LibSequenceConfigSection section : sections) {
 			LibSequenceConfigSequence sequence=section.findSequence(securityToken);
@@ -46,18 +49,17 @@ public class LibSequenceConfigManager {
 		return null;		
 	}
 	
+
 	public LibSequenceConfigSequence findOwnSequence(LibSequenceCallback callback, String sequenceName) {
 		LibSequenceConfigSection section = findSection(callback);
 		if(section==null) {
 			return null;
 		}
-		LibSequenceConfigSequence sequence = section.getSequence(sequenceName);
-		if (sequence==null) {
-			return null;
-		}
-		return sequence;
+
+		return  section.getSequence(sequenceName);
 	}
 	
+
 	public Set<String> getSequenceNames (LibSequenceCallback callback) {
 		LibSequenceConfigSection section = findSection(callback);
 		if (section==null) {
@@ -78,17 +80,21 @@ public class LibSequenceConfigManager {
 		if (newSection==null) {
 			return new LibSequenceConfigResult(null, 0, LSCERR_SECTION_GENERATION_ERROR, null, null);
 		}
+
 		LibSequenceConfigResult result = newSection.checkSyntax();
 		if (result.hasError()) {
 			return result;
 		}
+
 		if (oldSection != null) {
 			sections.remove(oldSection);
 		}
+
 		sections.add(newSection);
 		return new LibSequenceConfigResult(null, 0, LSCERR_OK, null, null);
 	}
 	
+
 	// Removes a complete section including all of their sequences
 	// This is a admin function so you must authenticate yourself by giving me the callback object 
 	public LibSequenceConfigResult removeSection(LibSequenceCallback callback) {
@@ -96,6 +102,7 @@ public class LibSequenceConfigManager {
 		if (sectionOld==null) {
 			return  new LibSequenceConfigResult(null, 0, LSCERR_SECTION_NOT_FOUND, null, null);
 		}
+
 		sections.remove(sectionOld);
 		return new LibSequenceConfigResult(null, 0, LSCERR_OK, null, null);
 	}

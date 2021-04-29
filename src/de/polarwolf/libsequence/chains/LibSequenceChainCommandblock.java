@@ -34,10 +34,12 @@ public class LibSequenceChainCommandblock implements Listener, LibSequenceChain 
 	protected List<LibSequenceChainInteraction> chainInteractions = new ArrayList<>();
 	protected List<String> validMaterials = new ArrayList<>();
 	
+
 	public LibSequenceChainCommandblock (Plugin plugin) {
 		initializeMaterials();
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
+
 	
 	// Handle Materials
 	protected void initializeMaterials() {
@@ -45,6 +47,7 @@ public class LibSequenceChainCommandblock implements Listener, LibSequenceChain 
 		validMaterials.add(MATERIAL_BUTTON);
 		validMaterials.add(MATERIAL_PRESSURE_PLATE);
 	}
+
 	
 	protected boolean isValidMaterial(String materialName) {
 		for (String s : validMaterials) {
@@ -54,6 +57,7 @@ public class LibSequenceChainCommandblock implements Listener, LibSequenceChain 
 		}
 		return false;
 	}
+
 	
 	// Low-level functions to handle the interaction-list
 	protected void cleanupChain() {
@@ -66,12 +70,14 @@ public class LibSequenceChainCommandblock implements Listener, LibSequenceChain 
 			}
 		}
 	}
+
 	
 	protected void addChainInteraction(CommandSender sender, Block target) {
 		cleanupChain();
 		chainInteractions.add(new LibSequenceChainInteraction(sender, target));
 	}
 	
+
 	protected Player findBestPlayer(Block target) {
 		List<LibSequenceChainInteraction> chainHits = new ArrayList<>();
 		
@@ -92,6 +98,7 @@ public class LibSequenceChainCommandblock implements Listener, LibSequenceChain 
 			}			
 		}
 		
+
 		// If we have more than one hit, let's take the newest
 		// We do not need to care about TIMEFRAME here, this is done in resolveChain
 		long maxTimestamp = 0;
@@ -109,11 +116,13 @@ public class LibSequenceChainCommandblock implements Listener, LibSequenceChain 
 		return (Player)bestInteraction.getSender();			
 	}
 	
+
 	protected void updateRunOptions(LibSequenceRunOptions runOptions, Player player) {
 		runOptions.setInitiator(player);
 	}
 
 		
+
 	@Override
 	public boolean resolveChain(LibSequenceRunOptions runOptions) {
 
@@ -142,6 +151,7 @@ public class LibSequenceChainCommandblock implements Listener, LibSequenceChain 
 		return true;
 	}
 			
+
 	public void handleBlockInteraction(Block clickedBlock, Player player, Action action) {
 
 		// right clicks and physicals (walk over pressure plate) only
@@ -159,6 +169,7 @@ public class LibSequenceChainCommandblock implements Listener, LibSequenceChain 
 		addChainInteraction(player, clickedBlock);
 	}
 	
+
 	@EventHandler(priority=EventPriority.LOWEST)
 	public void onPlayerInteract(PlayerInteractEvent e) {
 		

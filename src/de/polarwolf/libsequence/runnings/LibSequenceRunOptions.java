@@ -74,7 +74,19 @@ public class LibSequenceRunOptions {
 		}
 		Player player = (Player)initiator;
 		return player.getLocale();
-		}
+	}
 	
-
+	// Authorization keys are not included in the copy
+	public LibSequenceRunOptions getCopy() {
+		LibSequenceRunOptions newRunOptions = new LibSequenceRunOptions();
+		newRunOptions.initiator = initiator;
+		newRunOptions.singleton = singleton;
+		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+			String attributeName = entry.getKey();
+			String attributeValue = entry.getValue();
+			newRunOptions.placeholders.put(attributeName, attributeValue);			
+		}
+		return newRunOptions;
+	}
+	
 }

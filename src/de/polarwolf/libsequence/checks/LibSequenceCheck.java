@@ -1,11 +1,9 @@
 package de.polarwolf.libsequence.checks;
 
-import org.bukkit.plugin.Plugin;
-
-import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
+import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public interface LibSequenceCheck {
 	
-	public LibSequenceCheckResult performCheck (String checkName, String valueText, Plugin plugin, LibSequenceRunOptions runOptions);
+	public LibSequenceCheckResult performCheck (String checkName, String valueText, LibSequenceRunningSequence runningSequence);
 
 }

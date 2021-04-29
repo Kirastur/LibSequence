@@ -23,5 +23,4 @@ public enum LibSequenceCheckErrors {
 		return errorText;
 	}
 
-
 }

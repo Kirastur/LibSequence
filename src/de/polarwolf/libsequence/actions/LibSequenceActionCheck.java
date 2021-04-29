@@ -5,7 +5,6 @@ import static de.polarwolf.libsequence.actions.LibSequenceActionErrors.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import de.polarwolf.libsequence.checks.LibSequenceCheckManager;
 import de.polarwolf.libsequence.checks.LibSequenceCheckResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
@@ -13,12 +12,7 @@ import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 public class LibSequenceActionCheck  extends LibSequenceActionGeneric {
 	
 	public static final String KEYNAME_DENYMESSAGE = "denymessage";
-	
-	protected final LibSequenceCheckManager checkManager;
-	
-	public LibSequenceActionCheck(LibSequenceCheckManager checkManager) {
-		this.checkManager = checkManager;
-	}
+
 	
     @Override
 	public LibSequenceActionResult checkSyntax(LibSequenceConfigStep configStep) {
@@ -29,7 +23,7 @@ public class LibSequenceActionCheck  extends LibSequenceActionGeneric {
 	@Override
 	public LibSequenceActionResult doExecute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) {
 
-		LibSequenceCheckResult checkResult = checkManager.performChecks(sequence, configStep);
+		LibSequenceCheckResult checkResult = sequence.performChecks(configStep);
 		if (checkResult.hasError()) {
 
 			String sDenyMessage;

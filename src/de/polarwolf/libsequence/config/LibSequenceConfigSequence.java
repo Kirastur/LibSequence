@@ -33,6 +33,7 @@ public class LibSequenceConfigSequence {
 
 	protected final ArrayList<LibSequenceConfigStep> steps = new ArrayList<>();
 		
+
 	public LibSequenceConfigSequence(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, String sequenceName, ConfigurationSection config) {
 		this.callback=callback;
 		this.actionValidator=actionValidator;
@@ -42,6 +43,7 @@ public class LibSequenceConfigSequence {
 		securityToken=UUID.randomUUID().toString();
 	}
 	
+
 	public LibSequenceConfigSequence(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, String sequenceName, List<Map<String,String>> config) {
 		this.callback=callback;
 		this.actionValidator=actionValidator;
@@ -50,6 +52,7 @@ public class LibSequenceConfigSequence {
 		hasEnumError=!loadStepsFromList(config);	
 		securityToken=UUID.randomUUID().toString();
 	}
+
 
 	protected boolean loadStepsFromConfig(ConfigurationSection config) {
 		int i = 1;
@@ -64,6 +67,7 @@ public class LibSequenceConfigSequence {
 		return (getSize()==(i-1));
 	}
 
+
 	protected boolean loadStepsFromList(List<Map<String,String>> config) {
 		for (Map<String,String> stepTouples : config) {
 			if (stepTouples==null) {
@@ -74,11 +78,13 @@ public class LibSequenceConfigSequence {
 		return true;
 	}
 	
+
 	// This method is final, so no one can override this to steal a foreign callback-object
 	public final boolean verifyAccess(LibSequenceCallback callbackToCheck) {
 		return callbackToCheck==callback;
 	}
 	
+
 	// The security token is needed to execute a sequence
 	// You can get it only if you are the owner of the sequence
 	// Only the owner knows the callback-object, so we use this as authentication method 
@@ -90,6 +96,7 @@ public class LibSequenceConfigSequence {
 		}
 	}
 	
+
 	// Even it the security token is not known by others, 
 	// every plugin can verify if it has the correct one for this sequence
 	// This method is final, so no one can override this to steal a foreign token
@@ -98,14 +105,17 @@ public class LibSequenceConfigSequence {
 		return securityToken.equals(tokenToCheck);
 	}
 
+
 	public String getSequenceName() {
 		return sequenceName;
 	}
 	
+
 	public int getSize() {
 		return steps.size();
 	}
 	
+
 	public LibSequenceConfigStep getStep(int stepNr) {
 		if ((stepNr > 0) && (stepNr <= getSize())) {
 			return steps.get(stepNr-1);
@@ -114,6 +124,7 @@ public class LibSequenceConfigSequence {
 		}
 	}
 	
+
 	public LibSequenceConfigResult checkSyntax() {
 		if (hasEnumError) {
 			return new LibSequenceConfigResult(getSequenceName(), 0, LSCERR_STEP_ENUM, null, null);

@@ -10,11 +10,14 @@ import org.bukkit.scheduler.BukkitTask;
 
 import de.polarwolf.libsequence.actions.LibSequenceActionResult;
 import de.polarwolf.libsequence.callback.LibSequenceCallback;
+import de.polarwolf.libsequence.checks.LibSequenceCheckResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigSequence;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
+import de.polarwolf.libsequence.includes.LibSequenceIncludeResult;
 
 public class LibSequenceRunningSequence {
-
+	
+	public static final int TICKS_PER_SECOND = 20;
 	
 	protected final LibSequenceCallback callback;
 	protected final LibSequenceConfigSequence configSequence;
@@ -47,64 +50,97 @@ public class LibSequenceRunningSequence {
 		plugin = currentTask.getOwner();			
 	}
 	
+
 	public boolean isCancelled() {
 		return bCancel;
 	}
 	
+
 	public boolean isFinished() {
 		return bFinish;
 	}
 	
+
 	public int getStepNr() {
 		return step;
 	}
 	
+
 	public String getName() {
 		return configSequence.getSequenceName();
 	}
 	
+
 	// RunManager takes care that the RunManager object always exist
 	public LibSequenceRunOptions getRunOptions() {
 		return runOptions;
 	}
 	
+
 	public Plugin getPlugin() {
 		return plugin;
 	}
 	
+
 	public final boolean verifyAccess(LibSequenceCallback callbackToCheck) {
 		return configSequence.verifyAccess(callbackToCheck);
 	}
 
+	
+	// Gateway to PlaceholderManager
 	// RunManager takes care if the messageText is null
 	public String resolvePlaceholder(String messageText) {
 		return runManager.resolvePlaceholder(messageText, runOptions);
 	}
+
+	
+	// GatewayManager to ConditionManager
+	public boolean resolveCondition(String conditionText) {
+		return runManager.resolveCondition(conditionText, this);
+	}
+
+	
+	// Gateway to CheckManager
+	public LibSequenceCheckResult performChecks(LibSequenceConfigStep configStep) {
+		return runManager.performChecks(this, configStep);
+	}
+
+	
+	// Gateway to IncludeManager
+	public LibSequenceIncludeResult performIncludes(LibSequenceConfigStep configStep) {
+		return runManager.performIncludes(this, configStep);
+	}
+
 	
 	protected LibSequenceActionResult executeStep(LibSequenceConfigStep configStep) {
 		return runManager.doExecute(this, configStep);
 	}
+
 	
 	protected void onInit() {
 		runManager.onInit(this);	
 		callback.debugSequenceStarted(this);
 	}
 	
+
 	protected void onCancel() {
 		callback.debugSequenceCancelled(this);
 		runManager.onCancel(this);	
 	}
+
 
 	protected void onFinish() {
 		callback.debugSequenceFinished(this);
 		runManager.onFinish(this);	
 	}
 	
- 	protected BukkitTask createScheduledTask(int wait) {
+
+	protected BukkitTask createScheduledTask(int wait) {
 		SingleStepTask task = new SingleStepTask(this);
 		return callback.scheduleTask(task, wait);
 	}
 	
+
 	// A cancel must always be possible, so no return value here
 	public void cancel() {
 		if (bFinish) {
@@ -127,6 +163,7 @@ public class LibSequenceRunningSequence {
 			handleEndOfSequence();
 		}
 	}
+
 
 	protected void handleNextStep() {
 
@@ -166,11 +203,12 @@ public class LibSequenceRunningSequence {
 		if (wait==0) {
 			wait=1;
 		} else {
-			wait=wait*20;
+			wait=wait * TICKS_PER_SECOND;
 		}
 		currentTask = createScheduledTask(wait);
 	}
 	
+
 	private void handleEndOfSequence() {
 		if (bFinish) {
 			return;

@@ -26,15 +26,18 @@ public class LibSequenceSequencer {
 
 	protected final LibSequenceOrchestrator orchestrator;
 	
+
 	public LibSequenceSequencer(Plugin plugin, LibSequenceStartOptions startOptions) {
 		orchestrator = createOrchestrator(plugin, startOptions);
 	}
 	
+
 	// IntegrationManager Interface
 	public boolean hasIntegrationPlaceholderAPI() {
 		return orchestrator.getIntegrationManager().hasPlaceholderAPI();		
 	}
 	
+
 	public boolean hasIntegrationWorldguard() {
 		return orchestrator.getIntegrationManager().hasWorldguard();		
 	}
@@ -45,11 +48,12 @@ public class LibSequenceSequencer {
 		return orchestrator.getActionManager().registerAction(actionName, action);		
 	}
 	
+
 	protected LibSequenceActionValidator getActionValidator() {
 		return orchestrator.getActionManager().getActionValidator();
 	}
 
-	
+
 	// RunManager Interface
 	public LibSequenceRunResult executeForeignSequence(LibSequenceCallback callback, String securityToken, LibSequenceRunOptions runOptions) {
 		LibSequenceConfigSequence sequence = orchestrator.getConfigManager().findForeignSequence(securityToken);
@@ -59,6 +63,7 @@ public class LibSequenceSequencer {
 		return orchestrator.getRunManager().execute(callback, sequence, securityToken, runOptions);
 	}
 	
+
 	public LibSequenceRunResult executeOwnSequence(LibSequenceCallback callback, String sequenceName, LibSequenceRunOptions runOptions) {
 		LibSequenceConfigSequence sequence = orchestrator.getConfigManager().findOwnSequence(callback, sequenceName);
 		if (sequence==null) {
@@ -68,14 +73,17 @@ public class LibSequenceSequencer {
 		return orchestrator.getRunManager().execute(callback, sequence, securityToken, runOptions);
 	}
 
+
 	public LibSequenceRunResult cancelSequence(LibSequenceRunningSequence runningSequence) {
 		return orchestrator.getRunManager().cancel(runningSequence);
 	}
 	
+
 	public LibSequenceRunResult cancelSequenceByName(LibSequenceCallback callback, String sequenceName) {
 		return orchestrator.getRunManager().cancelByName(callback, sequenceName);
 	}
 	
+
 	public Set<LibSequenceRunningSequence> queryRunningSequences(LibSequenceCallback callback) {
 		return orchestrator.getRunManager().queryRunningSequences(callback);
 	}
@@ -86,10 +94,12 @@ public class LibSequenceSequencer {
 		return orchestrator.getConfigManager().loadSection(callback);
 	}
 	
+
 	public LibSequenceConfigResult removeSection(LibSequenceCallback callback) {
 		return orchestrator.getConfigManager().removeSection(callback);
 	}
 	
+
 	public String getSecurityToken (LibSequenceCallback callback, String sequenceName) {
 		LibSequenceConfigSequence sequence = orchestrator.getConfigManager().findOwnSequence(callback, sequenceName);
 		if (sequence != null) {
@@ -98,16 +108,19 @@ public class LibSequenceSequencer {
 		return null;
 	}
 	
+
 	public boolean hasForeignSequence(String securityToken) {
 		LibSequenceConfigSequence sequence = orchestrator.getConfigManager().findForeignSequence(securityToken);
 		return (sequence!=null);
 	}
 	
+
 	public boolean hasOwnSequence(LibSequenceCallback callback, String sequenceName) {
 		LibSequenceConfigSequence sequence = orchestrator.getConfigManager().findOwnSequence(callback, sequenceName);
 		return (sequence!=null);
 	}
 	
+
 	public Set<String> getSequenceNames(LibSequenceCallback callback) {
 		return orchestrator.getConfigManager().getSequenceNames (callback);
 	}
@@ -117,6 +130,7 @@ public class LibSequenceSequencer {
 	public void registerPlaceholder(LibSequencePlaceholder placeholder) {
 		orchestrator.getPlaceholderManager().registerPlaceholder(placeholder);
 	}
+
 	
 	// CheckManager
 	public LibSequenceCheckResult registerCheck(String checkName, LibSequenceCheck check) {
@@ -136,4 +150,3 @@ public class LibSequenceSequencer {
 	}
 	
 }
-
