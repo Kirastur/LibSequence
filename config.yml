@@ -111,6 +111,8 @@ sequences:
          action: notify
          message: Sequence is started by %PLAYER%
          message_de_de: Spieler %PLAYER% hat die Sequence gestartet
+         include_operator: yes
+         include_console: yes
       2:
          action: broadcast
          message: First notification

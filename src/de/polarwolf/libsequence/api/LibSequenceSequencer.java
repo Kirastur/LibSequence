@@ -15,6 +15,8 @@ import de.polarwolf.libsequence.checks.LibSequenceCheck;
 import de.polarwolf.libsequence.checks.LibSequenceCheckResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigSequence;
+import de.polarwolf.libsequence.includes.LibSequenceInclude;
+import de.polarwolf.libsequence.includes.LibSequenceIncludeResult;
 import de.polarwolf.libsequence.orchestrator.LibSequenceOrchestrator;
 import de.polarwolf.libsequence.orchestrator.LibSequenceStartOptions;
 import de.polarwolf.libsequence.placeholders.LibSequencePlaceholder;
@@ -135,6 +137,12 @@ public class LibSequenceSequencer {
 	// CheckManager
 	public LibSequenceCheckResult registerCheck(String checkName, LibSequenceCheck check) {
 		return orchestrator.getCheckManager().registerCheck(checkName, check);
+	}
+
+	
+	// IncludeManager
+	public LibSequenceIncludeResult registerInclude(String includeName, LibSequenceInclude include) {
+		return orchestrator.getIncludeManager().registerInclude(includeName, include);
 	}
 
 	
