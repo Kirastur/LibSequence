@@ -58,20 +58,20 @@ public class LibSequenceSequencer {
 
 
 	// RunManager Interface
-	public void executeForeignSequence(LibSequenceCallback callback, String securityToken, LibSequenceRunOptions runOptions) throws LibSequenceRunException {
+	public LibSequenceRunningSequence executeForeignSequence(LibSequenceCallback callback, String securityToken, LibSequenceRunOptions runOptions) throws LibSequenceRunException {
 		LibSequenceConfigSequence sequence = orchestrator.getConfigManager().findForeignSequence(securityToken);
 		if (sequence==null) {
 			throw new LibSequenceRunException(null, 0, LSRERR_NOT_FOUND, null);
 		}
-		orchestrator.getRunManager().execute(callback, sequence, securityToken, runOptions);
+		return orchestrator.getRunManager().execute(callback, sequence, securityToken, runOptions);
 	}
 	
 
-	public void executeOwnSequence(LibSequenceCallback callback, String sequenceName, LibSequenceRunOptions runOptions) throws LibSequenceRunException  {
+	public LibSequenceRunningSequence executeOwnSequence(LibSequenceCallback callback, String sequenceName, LibSequenceRunOptions runOptions) throws LibSequenceRunException  {
 		try {
 			LibSequenceConfigSequence sequence = orchestrator.getConfigManager().getOwnSequence(callback, sequenceName);
 			String securityToken = sequence.getSecurityToken(callback);
-			orchestrator.getRunManager().execute(callback, sequence, securityToken, runOptions);
+			return orchestrator.getRunManager().execute(callback, sequence, securityToken, runOptions);
 		} catch (LibSequenceConfigException e) {
 			throw new LibSequenceRunException(null, 0, LSRERR_NOT_FOUND, null);
 		}

@@ -45,8 +45,8 @@ public final class LibSequenceController {
  	}
  	
 
-	public void execute(String sequenceName, LibSequenceRunOptions runOptions) throws LibSequenceRunException {
- 		sequencer.executeOwnSequence(callback, sequenceName, runOptions);
+	public LibSequenceRunningSequence execute(String sequenceName, LibSequenceRunOptions runOptions) throws LibSequenceRunException {
+ 		return sequencer.executeOwnSequence(callback, sequenceName, runOptions);
  	}
  	
 

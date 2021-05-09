@@ -7,12 +7,12 @@ public class LibSequenceIntegrationException extends LibSequenceException {
 	private static final long serialVersionUID = 1L;
 	
 
-	protected LibSequenceIntegrationException(String contextName, String errorName, String errorDetailText) {
+	public LibSequenceIntegrationException(String contextName, String errorName, String errorDetailText) {
 		super(contextName, errorName, errorDetailText);
 	}
 
 
-	protected LibSequenceIntegrationException(String contextName, String errorName, String errorDetailText, Throwable cause) {
+	public LibSequenceIntegrationException(String contextName, String errorName, String errorDetailText, Throwable cause) {
 		super(contextName, errorName, errorDetailText, cause);
 	}
 	
