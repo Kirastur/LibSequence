@@ -1,5 +1,7 @@
 package de.polarwolf.libsequence.runnings;
 
+import static de.polarwolf.libsequence.runnings.LibSequenceRunErrors.LSRERR_JAVA_EXCEPTION;
+
 import org.bukkit.scheduler.BukkitRunnable;
 
 // This class is supposed to be final
@@ -15,7 +17,13 @@ public final class SingleStepTask extends BukkitRunnable {
 	
 	@Override
 	public void run() {
-		sequence.handleNextStep();
+		try {
+			sequence.handleNextStep();
+		} catch (Exception e) {
+			LibSequenceRunException lse = new LibSequenceRunException(sequence.getName(), sequence.getStepNr(), LSRERR_JAVA_EXCEPTION, null, e);
+			sequence.onExecutionError(lse);
+			sequence.cancel();
+		}
 	}
 
 }

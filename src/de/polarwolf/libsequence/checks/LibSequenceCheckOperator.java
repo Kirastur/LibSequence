@@ -4,6 +4,7 @@ import static de.polarwolf.libsequence.checks.LibSequenceCheckErrors.*;
 
 import org.bukkit.command.CommandSender;
 
+import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public class LibSequenceCheckOperator implements LibSequenceCheck {
@@ -11,19 +12,16 @@ public class LibSequenceCheckOperator implements LibSequenceCheck {
 	public static final String AUTOOP = "luckperms.autoop";
 
 	@Override
-	public LibSequenceCheckResult performCheck (String checkName, String valueText, LibSequenceRunningSequence runningSequence) {
+	public String performCheck (String checkName, String valueText, LibSequenceRunningSequence runningSequence) throws LibSequenceException {
 		valueText = runningSequence.resolvePlaceholder(valueText);
-		if (valueText.isEmpty()) {
-			return new LibSequenceCheckResult(checkName, LSCERR_VALUE_MISSING, null);
-		}
-		
+
 		if (!runningSequence.resolveCondition(valueText)) {
-			return new LibSequenceCheckResult(checkName, LSCERR_FALSE, " condition is not true");
+			return "Condition is not TRUE: " + valueText;
 		}
 
 		CommandSender initiator = runningSequence.getRunOptions().getInitiator();
 		if (initiator == null) {
-			return new LibSequenceCheckResult(checkName, LSCERR_FALSE, "no initiator given");			
+			throw  new LibSequenceCheckException(checkName, LSKERR_NO_INITIATOR, null);			
 		}
 		
 		// Option 1: Classical OP
@@ -33,9 +31,9 @@ public class LibSequenceCheckOperator implements LibSequenceCheck {
 		boolean isAutoOP = initiator.hasPermission(AUTOOP);
 		
 		if (isOP || isAutoOP) {
-			return new LibSequenceCheckResult(checkName, LSCERR_OK, null);
+			return "";
 		} else {
-			return new LibSequenceCheckResult(checkName, LSCERR_FALSE, initiator.getName() + " is not a server operator");
+			return "Is not a server operator: " + initiator.getName();
 		}
 	}
 

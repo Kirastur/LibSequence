@@ -14,8 +14,8 @@ public final class LibSequenceActionValidator {
 	}
 	
 
-	public LibSequenceActionResult validateAction(LibSequenceConfigStep configStep) {
-		return actionManager.validateAction(configStep);
+	public void validateSyntax(LibSequenceConfigStep configStep) throws LibSequenceActionException {
+		actionManager.validateSyntax(configStep);
 	}
 	
 

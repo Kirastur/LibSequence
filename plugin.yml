@@ -1,6 +1,6 @@
 name: LibSequence
 description: Run a set of actions after time. Extendable scripting language. For Standalone and plugin-integration.
-version: 1.6
+version: 1.7
 authors: [Kirastur]
 website: https://www.spigotmc.org/resources/libsequence.90664
 

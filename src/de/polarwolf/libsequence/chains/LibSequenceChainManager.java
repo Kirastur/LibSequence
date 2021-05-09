@@ -3,6 +3,7 @@ package de.polarwolf.libsequence.chains;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
 
 public class LibSequenceChainManager {
@@ -15,7 +16,7 @@ public class LibSequenceChainManager {
 	}
 	
 
-	public void resolveChain(LibSequenceRunOptions runOptions) {
+	public void resolveChain(LibSequenceRunOptions runOptions) throws LibSequenceException {
 		for (LibSequenceChain chain : chains) {
 			if (chain.resolveChain(runOptions)) {
 				return;

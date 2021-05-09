@@ -3,6 +3,7 @@ package de.polarwolf.libsequence.placeholders;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
 
 public class LibSequencePlaceholderManager {
@@ -15,13 +16,21 @@ public class LibSequencePlaceholderManager {
 	}
 	
 
-	public String resolvePlaceholder(String messageText, LibSequenceRunOptions runOptions) {
+	public String resolvePlaceholder(String messageText, LibSequenceRunOptions runOptions) throws LibSequencePlaceholderException {
 		if (messageText == null) {
 			return null;
 		}
-		for (LibSequencePlaceholder placeholder : placeholders) {
+
+		for (LibSequencePlaceholder placeholder : placeholders) try {
 			messageText = placeholder.resolvePlaceholders(messageText, runOptions);
+		} catch (LibSequencePlaceholderException e) {
+			throw e;
+		} catch (LibSequenceException e) {
+			throw new LibSequencePlaceholderException(null, e.getTitle(), null, messageText, e);
+		} catch (Exception e) {
+			throw new LibSequencePlaceholderException(null, LibSequenceException.JAVA_EXCEPTION, null, messageText, e);
 		}
+
 		return messageText;
 	}
 

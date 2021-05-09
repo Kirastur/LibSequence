@@ -1,16 +1,18 @@
 package de.polarwolf.libsequence.checks;
 
+import de.polarwolf.libsequence.exception.LibSequenceException;
+
 public enum LibSequenceCheckErrors {
 	
-	LSCERR_OK ("OK"),
-	LSCERR_FALSE ("check returns FALSE"),
-	LSCERR_CHECK_NOT_FOUND ("Check not found"),
-	LSCERR_CHECK_ALREADY_EXISTS ("Check already exists"),
-	LSCERR_USER_DEFINED_ERROR ("User defined error"),
-	LSCERR_SYNTAX_ERROR ("Syntax error"),
-	LSCERR_NOT_NUMERIC ("Value is not numeric"),
-	LSCERR_VALUE_MISSING ("Value is missing"),
-	LSCERR_NOT_A_PLAYER ("Initiator must be a player");
+	LSKERR_JAVA_EXCEPTION (LibSequenceException.JAVA_EXCEPTION),
+	LSKERR_USER_DEFINED_ERROR ("User defined error"),
+	LSKERR_CHECK_NOT_FOUND ("Check not found"),
+	LSKERR_CHECK_ALREADY_EXISTS ("Check already exists"),
+	LSKERR_SYNTAX_ERROR ("Syntax error"),
+	LSKERR_NO_INITIATOR ("No initiator given"),
+	LSKERR_NOT_A_PLAYER ("Initiator must be a player"),
+	LSKERR_VALUE_MISSING ("Value is missing"),
+	LSKERR_NOT_NUMERIC ("Value is not numeric");
 
 	private final String errorText;
 	

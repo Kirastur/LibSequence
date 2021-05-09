@@ -2,10 +2,13 @@ package de.polarwolf.libsequence.actions;
 
 import static de.polarwolf.libsequence.actions.LibSequenceActionErrors.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
-import de.polarwolf.libsequence.includes.LibSequenceIncludeResult;
+import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public class LibSequenceActionTitle extends LibSequenceActionGeneric {
@@ -16,6 +19,27 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 	public static final String KEYNAME_FADEIN = "fadein";
 	public static final String KEYNAME_STAY = "stay";
 	public static final String KEYNAME_FADEOUT = "fadeout";
+	
+	public static final String USERERROR_TITLE = "'title' or 'subitle' must be defined";
+	public static final String USERERROR_NOT_NUMERIC = "Value must be numeric";
+
+
+	@Override
+    public boolean hasInclude() {
+		return true;
+	}
+	
+
+    @Override
+    public Set<String> getOptionalAttributes() {
+    	Set<String> myAttributes = new HashSet<>();
+    	myAttributes.add(KEYNAME_TITLE);
+    	myAttributes.add(KEYNAME_SUBTITLE);
+    	myAttributes.add(KEYNAME_FADEIN);
+    	myAttributes.add(KEYNAME_STAY);
+    	myAttributes.add(KEYNAME_FADEOUT);
+    	return myAttributes;
+	}
 
 
 	protected boolean verifyNumeric(String keyValue) {
@@ -32,30 +56,28 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 
 
 	@Override
-    public LibSequenceActionResult checkSyntax(LibSequenceConfigStep configStep) {
-		String sTitle = configStep.getValue(KEYNAME_TITLE);
-		String sSubtitle = configStep.getValue(KEYNAME_SUBTITLE);
-		String sFadein = configStep.getValue(KEYNAME_FADEIN);
-		String sStay = configStep.getValue(KEYNAME_STAY);
-		String sFadeout = configStep.getValue(KEYNAME_FADEOUT);
+    public void validateSyntax(LibSequenceConfigStep configStep) throws LibSequenceException {
+		String sTitle = configStep.findValue(KEYNAME_TITLE);
+		String sSubtitle = configStep.findValue(KEYNAME_SUBTITLE);
+		String sFadein = configStep.findValue(KEYNAME_FADEIN);
+		String sStay = configStep.findValue(KEYNAME_STAY);
+		String sFadeout = configStep.findValue(KEYNAME_FADEOUT);
 		
 		if ((sTitle==null) && (sSubtitle==null)) {			
-	    	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_MISSING_ATTRIBUTE, "'title' or 'subitle' must be defined", null);
+	    	throw new LibSequenceActionException(configStep.findActionName(), LSAERR_USER_DEFINED_ERROR, USERERROR_TITLE);
 		}
 		
 		if ((!verifyNumeric(sFadein)) || (!verifyNumeric(sStay)) || (!verifyNumeric(sFadeout))) {
-	    	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_EXCEPTION, "Attribute must be numeric", null);
+	    	throw new LibSequenceActionException(configStep.findActionName(), LSAERR_USER_DEFINED_ERROR, USERERROR_NOT_NUMERIC);
 		}
-
-		return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_OK, null, null);
 	}
 
 
 	@Override
-	public LibSequenceActionResult doExecute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) {
-		String sFadein = configStep.getValue(KEYNAME_FADEIN);
-		String sStay = configStep.getValue(KEYNAME_STAY);
-		String sFadeout = configStep.getValue(KEYNAME_FADEOUT);
+	public void execute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) throws LibSequenceException {
+		String sFadein = configStep.findValue(KEYNAME_FADEIN);
+		String sStay = configStep.findValue(KEYNAME_STAY);
+		String sFadeout = configStep.findValue(KEYNAME_FADEOUT);
 		
 		int iFadein = 10;
 		int iStay = 70;
@@ -73,29 +95,20 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 			iFadeout = Integer.parseUnsignedInt(sFadeout);
 		}
 		
-		LibSequenceIncludeResult includeResult = sequence.performIncludes(configStep);
+		Set<CommandSender> senders = sequence.performIncludes(configStep);
 		
-		if (includeResult.getSenders() != null) {
-			for (CommandSender sender : includeResult.getSenders()) {
-				if (sender instanceof Player) {
-					Player player = (Player)sender;
-					String sTitle = configStep.getValueLocalized(KEYNAME_TITLE, player.getLocale());
-					sTitle = sequence.resolvePlaceholder(sTitle);
-					
-					String sSubtitle = configStep.getValueLocalized(KEYNAME_SUBTITLE, player.getLocale());
-					sSubtitle = sequence.resolvePlaceholder(sSubtitle);
-
-					player.sendTitle(sTitle, sSubtitle, iFadein, iStay, iFadeout);
+		for (CommandSender sender : senders) {
+			if (sender instanceof Player) {
+				Player player = (Player)sender;
+				String sTitle = configStep.findValueLocalized(KEYNAME_TITLE, player.getLocale());
+				sTitle = sequence.resolvePlaceholder(sTitle);
+				
+				String sSubtitle = configStep.findValueLocalized(KEYNAME_SUBTITLE, player.getLocale());
+				sSubtitle = sequence.resolvePlaceholder(sSubtitle);
+				player.sendTitle(sTitle, sSubtitle, iFadein, iStay, iFadeout);
 				}
 			}
 		}
 		
-		if (includeResult.hasError()) {
-			includeResult.overwriteSenders(null);
-	    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_USER_DEFINED_ERROR, "include failed", includeResult);
-		}
-
-    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_OK, null, null);
-	}
 
 }

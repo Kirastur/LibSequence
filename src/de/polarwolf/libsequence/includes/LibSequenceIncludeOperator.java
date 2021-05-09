@@ -1,13 +1,12 @@
 package de.polarwolf.libsequence.includes;
 
-import static de.polarwolf.libsequence.includes.LibSequenceIncludeErrors.*;
-
 import java.util.HashSet;
 import java.util.Set;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public class LibSequenceIncludeOperator  implements LibSequenceInclude {
@@ -16,11 +15,8 @@ public class LibSequenceIncludeOperator  implements LibSequenceInclude {
 
 	
 	@Override
-	public LibSequenceIncludeResult performInclude(String includeName, String valueText, boolean inverseSearch, LibSequenceRunningSequence runningSequence) {
+	public Set<CommandSender> performInclude(String includeName, String valueText, boolean inverseSearch, LibSequenceRunningSequence runningSequence) throws LibSequenceException {
 		valueText = runningSequence.resolvePlaceholder(valueText);
-		if (valueText.isEmpty()) {
-			return new LibSequenceIncludeResult(null, includeName, LSIERR_VALUE_MISSING, null);
-		}
 
 		Set<CommandSender> senders = new HashSet<>();
 		for (Player player : runningSequence.getPlugin().getServer().getOnlinePlayers()) {
@@ -30,7 +26,7 @@ public class LibSequenceIncludeOperator  implements LibSequenceInclude {
 			}
 		}
 		
-		return new LibSequenceIncludeResult(senders, includeName, LSIERR_OK, null);
+		return senders;
 	}
 
 }

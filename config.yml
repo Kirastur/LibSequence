@@ -9,9 +9,17 @@
 # - If this is not enough customizing for you,
 # -   you can extend the the function of the sequencer
 # -   e.g. enhance the sequence syntax by extending the java config objects
-#
-# - Please see https://github.com/Kirastur/LibSequence/wiki for Documentation
-# - Contact us at https://discord.gg/MBJjqUHQHR for support
+# -
+# -
+# - Please see our Github Wiki for Documentation
+# -      https://github.com/Kirastur/LibSequence/wiki
+# -
+# - Visit our homepage for more information
+# -      https://www.spigotmc.org/resources/libsequence.90664
+# -
+# - For support you can contact us at discord.
+# -      A link to discord can be found on our homepage
+
 
 
 # Limit the functionality of this plugin

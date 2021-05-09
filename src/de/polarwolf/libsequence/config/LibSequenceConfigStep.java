@@ -1,11 +1,10 @@
 package de.polarwolf.libsequence.config;
 
 // The tree is: Manager ==> Section ==> Sequence ==> Step
-//
-// A Step is an unordered list of name/value pairs
 
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -14,7 +13,7 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import static de.polarwolf.libsequence.config.LibSequenceConfigErrors.*;
 
-import de.polarwolf.libsequence.actions.LibSequenceActionResult;
+import de.polarwolf.libsequence.actions.LibSequenceActionException;
 import de.polarwolf.libsequence.actions.LibSequenceActionValidator;
 
 public class LibSequenceConfigStep {
@@ -25,61 +24,54 @@ public class LibSequenceConfigStep {
 	
 	// Please use the public getter for this
 	// Perhaps someone wants to override it
-	protected final String sequenceName;
-	protected final int stepNr;
+	private final String sequenceName;
+	private final int stepNr;
 	
 	// The actionValidator is called during syntax check
 	protected final LibSequenceActionValidator actionValidator;
 	
-	// Flag if we have a problem reading the config from source
-	protected final String keyWithSyntaxError;
-
 	// Container for the Name/Value pairs of the step
-	protected final Map<String,String> stepData = new  HashMap<>();
+	protected final Map<String,String> attributes = new HashMap<>();
 	
 
-	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, int stepNr, ConfigurationSection config) {
+	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, int stepNr, ConfigurationSection config) throws LibSequenceConfigException {
 		this.actionValidator=actionValidator;
 		this.sequenceName=sequenceName;
 		this.stepNr=stepNr;
-
-		keyWithSyntaxError=loadStepFromConfig(config);
+		loadStepFromConfig(config);
 	}
 	
 
-	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, int stepNr, Map<String,String> config) {
+	public LibSequenceConfigStep(LibSequenceActionValidator actionValidator, String sequenceName, int stepNr, Map<String,String> config) throws LibSequenceConfigException {
 		this.actionValidator=actionValidator;
 		this.sequenceName=sequenceName;
 		this.stepNr=stepNr;
-
-		keyWithSyntaxError=loadStepFromMap(config);
+		loadStepFromMap(config);
 	}
 	
 
-	protected String loadStepFromConfig(ConfigurationSection config) {
-		for (String key : config.getKeys(false)) {
-			String value = config.getString(key);
-			if (value==null) {
-				return key;
-			} else {
-				stepData.put(key, config.getString(key));
+	// The bukkit ConfigurationSection is not able to detect duplicate keys
+	// so we cannot check for it
+	protected void loadStepFromConfig(ConfigurationSection config) throws LibSequenceConfigException {
+		for (String keyName : config.getKeys(false)) {
+			String valueText = config.getString(keyName);
+			if (valueText==null) {
+				throw new LibSequenceConfigException(getSequenceName(), getStepNr(), LSCERR_KEY_SYNTAX_ERROR, keyName);
 			}
+			attributes.put(keyName, valueText);
 		}
-		return null;
 	}
 	
 
-	protected String loadStepFromMap(Map<String,String> config) {
+	protected void loadStepFromMap(Map<String,String> config) throws LibSequenceConfigException {
 		for (Entry<String,String> entry : config.entrySet()) { 
-			String name = entry.getKey();
-			String value = entry.getValue();
-			if (value==null) {
-				return name;
-			} else {
-				stepData.put(name, value);
+			String keyName = entry.getKey();
+			String valueText = entry.getValue();
+			if (valueText==null) {
+				throw new LibSequenceConfigException(getSequenceName(), getStepNr(), LSCERR_KEY_SYNTAX_ERROR, keyName);
 			}
+			attributes.put(keyName, valueText);
 		}
-		return null;		
 	}
 	
 
@@ -101,18 +93,18 @@ public class LibSequenceConfigStep {
 	
 
 	// Please remember: return is null if no entry is found
-	public String getValue(String keyName) {
-		return stepData.get(keyName);
+	public String findValue(String keyName) {
+		return attributes.get(keyName);
 	}
 	
 
 	// Please remember: return is null if no entry is found
-	public String getValueLocalized(String keyName, String locale) {
+	public String findValueLocalized(String keyName, String locale) {
 		if (locale != null) {
 
 			// 1st try: take the full language (e.g. "de_de")
 			if (locale.length() >= 5) {
-				String s = getValue(keyName + "_" + locale.substring(0, 5));
+				String s = findValue(keyName + "_" + locale.substring(0, 5));
 				if (s != null) {
 					return s;
 				}
@@ -120,7 +112,7 @@ public class LibSequenceConfigStep {
 		
 			// 2nd try: take the group language (e.g. "de")
 			if (locale.length() >= 2) {
-				String s = getValue (keyName + "_" + locale.substring(0,  2));
+				String s = findValue (keyName + "_" + locale.substring(0,  2));
 				if (s != null) {
 					return s;
 				}
@@ -128,13 +120,13 @@ public class LibSequenceConfigStep {
 		}
 		
 		// No localized string found, return default
-		return getValue(keyName);
+		return findValue(keyName);
 	}
 	
 
 	// Get the number of seconds to wait after the action is executed
 	public int getWait() {
-		String waitTime = getValue(KEYNAME_WAIT);
+		String waitTime = findValue(KEYNAME_WAIT);
 		if (waitTime==null) {
 			return 0; //it could be that the step contains no wait, then set the wait to zero
 		}
@@ -144,40 +136,43 @@ public class LibSequenceConfigStep {
 	
 
 	// The Action is the key-feature of each step
-	public String getActionName() {
-		return getValue(KEYNAME_ACTION);
+	public String findActionName() {
+		return findValue(KEYNAME_ACTION);
 	}
 	
 
-	public Set<String> getKeys() {
-		return stepData.keySet();
+	public Set<String> getAttributeKeys() {
+		return new HashSet<>(attributes.keySet());
 	}
 
 
 	// The syntax check is called during initial section load and before every run
 	// An invalid sequence is not runnable
 	// A Sequence is immutable (it cannot be changed after load, except explicit section unload/reload)
-	public LibSequenceConfigResult checkSyntax() {
-		if ((keyWithSyntaxError!=null) && (!keyWithSyntaxError.isEmpty())) {		
-			return new LibSequenceConfigResult(getSequenceName(), getStepNr(), LSCERR_KEY_SYNTAX_ERROR, keyWithSyntaxError, null);
-		}
-		String actionName = getActionName();
+	public void validateSyntax() throws LibSequenceConfigException {
+		
+		// verify if actionName does exists		
+		String actionName = findActionName();
 		if ((actionName==null) || actionName.isEmpty()) {
-			return new LibSequenceConfigResult(getSequenceName(), getStepNr(), LSCERR_MISSING_ACTION, null, null);
+			throw new LibSequenceConfigException(getSequenceName(), getStepNr(), LSCERR_MISSING_ACTION, null);
 		}
-		String wait = getValue(KEYNAME_WAIT);
+		
+		// test if wait is numeric
+		String wait = findValue(KEYNAME_WAIT);
 		if (wait!=null) {
 			try {
 				Integer.parseUnsignedInt(wait);
 			} catch (Exception e) {
-				return new LibSequenceConfigResult(getSequenceName(), getStepNr(), LSCERR_WAIT_NOT_NUMERIC, wait, null);
+				throw new LibSequenceConfigException(getSequenceName(), getStepNr(), LSCERR_WAIT_NOT_NUMERIC, wait);
 			}
 		}
-		LibSequenceActionResult actionResult = actionValidator.validateAction(this);
-		if (actionResult.hasError()) {
-			return new LibSequenceConfigResult(getSequenceName(), getStepNr(), LSCERR_ACTION, null, actionResult);
+		
+		// check if the action itself does not have an error
+		try {
+			actionValidator.validateSyntax(this);
+		} catch (LibSequenceActionException e) {
+			throw new LibSequenceConfigException(getSequenceName(), getStepNr(), LSCERR_ACTION, null, e); 
 		}
-		return new LibSequenceConfigResult(getSequenceName(), getStepNr(), LSCERR_OK, null, null);
 	}
 		
 }

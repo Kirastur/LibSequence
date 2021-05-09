@@ -1,17 +1,17 @@
 package de.polarwolf.libsequence.actions;
 
+import de.polarwolf.libsequence.exception.LibSequenceException;
+
 public enum LibSequenceActionErrors {
 
-	LSAERR_OK ("OK"),
+	LSAERR_JAVA_EXCEPTION (LibSequenceException.JAVA_EXCEPTION),
 	LSAERR_USER_DEFINED_ERROR ("User defined error"),
 	LSAERR_ACTION_NOT_FOUND ("Action not found"),
 	LSAERR_ACTION_ALREADY_EXISTS ("Action already exists"),
-	LSAERR_MISSING_ATTRIBUTE ("Required attribute is missing"),
+	LSAERR_SYNTAX_ERROR ("Syntax error"),
 	LSAERR_WRONG_INSTANCE ("Step belongs to another instance"),
 	LSAERR_NOT_AUTHORIZED ("Action is not authorizied"),
-	LSAERR_EXCEPTION ("Exception caught"),
-	LSAERR_UNKNOWN_VALUE ("Unknown attribute value"),
-	LSAERR_CHECK_FAILED ("Check failed");
+	LSAERR_UNKNOWN_VALUE ("Unknown value");
 
 	private final String errorText;
 	

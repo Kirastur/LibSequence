@@ -1,5 +1,8 @@
 package de.polarwolf.libsequence.runnings;
 
+import java.util.Set;
+
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
 
 // The tree is: RunManager ==> RunningSequence
@@ -8,12 +11,12 @@ import org.bukkit.plugin.Plugin;
 
 import org.bukkit.scheduler.BukkitTask;
 
-import de.polarwolf.libsequence.actions.LibSequenceActionResult;
 import de.polarwolf.libsequence.callback.LibSequenceCallback;
-import de.polarwolf.libsequence.checks.LibSequenceCheckResult;
+import de.polarwolf.libsequence.checks.LibSequenceCheckException;
 import de.polarwolf.libsequence.config.LibSequenceConfigSequence;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
-import de.polarwolf.libsequence.includes.LibSequenceIncludeResult;
+import de.polarwolf.libsequence.includes.LibSequenceIncludeException;
+import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderException;
 
 public class LibSequenceRunningSequence {
 	
@@ -82,14 +85,14 @@ public class LibSequenceRunningSequence {
 	}
 	
 
-	public final boolean verifyAccess(LibSequenceCallback callbackToCheck) {
-		return configSequence.verifyAccess(callbackToCheck);
+	public final boolean hasAccess(LibSequenceCallback callbackToCheck) {
+		return configSequence.hasAccess(callbackToCheck);
 	}
 
 	
 	// Gateway to PlaceholderManager
 	// RunManager takes care if the messageText is null
-	public String resolvePlaceholder(String messageText) {
+	public String resolvePlaceholder(String messageText) throws LibSequencePlaceholderException {
 		return runManager.resolvePlaceholder(messageText, runOptions);
 	}
 
@@ -101,19 +104,31 @@ public class LibSequenceRunningSequence {
 
 	
 	// Gateway to CheckManager
-	public LibSequenceCheckResult performChecks(LibSequenceConfigStep configStep) {
+	public boolean performChecks(LibSequenceConfigStep configStep) throws LibSequenceCheckException {
 		return runManager.performChecks(this, configStep);
 	}
 
 	
 	// Gateway to IncludeManager
-	public LibSequenceIncludeResult performIncludes(LibSequenceConfigStep configStep) {
+	public Set<CommandSender> performIncludes(LibSequenceConfigStep configStep) throws LibSequenceIncludeException {
 		return runManager.performIncludes(this, configStep);
 	}
 
 	
-	protected LibSequenceActionResult executeStep(LibSequenceConfigStep configStep) {
-		return runManager.doExecute(this, configStep);
+	// Report failed check to Callback
+	public void onCheckFailed(String checkName, String failMessage) {
+		callback.onCheckFailed(this, checkName, failMessage);
+	}
+
+
+	// Report exception to Callback
+	protected void onExecutionError(LibSequenceRunException e) {
+		callback.onExecutionError(this, e);
+	}
+
+	
+	protected void executeStep(LibSequenceConfigStep configStep) throws LibSequenceRunException {
+		runManager.executeStep(this, configStep);
 	}
 
 	
@@ -167,7 +182,7 @@ public class LibSequenceRunningSequence {
 
 	protected void handleNextStep() {
 
-		// Cleanup the reference to the Bukkit runTasLaterk object
+		// Cleanup the reference to the Bukkit runTasLater object
 		currentTask=null;
 
 		// check if sequence is cancelled during sleep
@@ -186,11 +201,12 @@ public class LibSequenceRunningSequence {
 		// Execute action
 		LibSequenceConfigStep configStep = configSequence.getStep(step);
 		callback.debugSequenceStepReached(this, configStep);
-		LibSequenceActionResult result = executeStep(configStep);
-		if (result.hasError()) {
-			callback.onExecutionError(this, result);
-			// The show must go on, no cancel here
+		try {
+			executeStep(configStep);
+		} catch (LibSequenceRunException e) {
+			onExecutionError(e);
 		}
+		// The show must go on, even on an error
 
 		// Check if action has cancelled the sequence
 		if (isCancelled()) {
@@ -209,7 +225,7 @@ public class LibSequenceRunningSequence {
 	}
 	
 
-	private void handleEndOfSequence() {
+	protected void handleEndOfSequence() {
 		if (bFinish) {
 			return;
 		}

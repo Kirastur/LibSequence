@@ -31,7 +31,7 @@ public class LibSequenceConfigManager {
 	// Calling section.verifyAccess(config) is secure because this method is final 
 	protected final LibSequenceConfigSection findSection(LibSequenceCallback callback) {
 		for (LibSequenceConfigSection section : sections) {
-			if (section.verifyAccess(callback)) {
+			if (section.hasAccess(callback)) {
 				return section;
 			}
 		}
@@ -49,23 +49,31 @@ public class LibSequenceConfigManager {
 		return null;		
 	}
 	
-
-	public LibSequenceConfigSequence findOwnSequence(LibSequenceCallback callback, String sequenceName) {
+	
+	public boolean hasOwnSequence(LibSequenceCallback callback, String sequenceName) {
 		LibSequenceConfigSection section = findSection(callback);
-		if(section==null) {
-			return null;
+		if (section == null) {
+			return false;
 		}
+		return section.hasSequence(sequenceName);
+	}
 
-		return  section.getSequence(sequenceName);
+	
+	public LibSequenceConfigSequence getOwnSequence(LibSequenceCallback callback, String sequenceName) throws LibSequenceConfigException {
+		LibSequenceConfigSection section = findSection(callback);
+		if (section == null) {
+			throw new LibSequenceConfigException(LSCERR_SECTION_NOT_FOUND, null);
+		}
+		return section.getSequence(sequenceName);
 	}
 	
 
-	public Set<String> getSequenceNames (LibSequenceCallback callback) {
+	public Set<String> getSequenceNames (LibSequenceCallback callback) throws LibSequenceConfigException {
 		LibSequenceConfigSection section = findSection(callback);
 		if (section==null) {
-			return new HashSet<>();
+			throw new LibSequenceConfigException(LSCERR_SECTION_NOT_FOUND, null);
 		}
-		return section.getSequenceKeys();
+		return section.getSequenceNames();
 	}
 			
 
@@ -73,38 +81,33 @@ public class LibSequenceConfigManager {
 	// A section can contains one or more sequences
 	// Each section must have its unique callback
 	// This is a admin function so you must authenticate yourself by giving me the callback object 
-	public LibSequenceConfigResult loadSection(LibSequenceCallback callback) {
+	public void loadSection(LibSequenceCallback callback) throws LibSequenceConfigException {
 		LibSequenceConfigSection oldSection = findSection(callback);
 		
 		LibSequenceConfigSection newSection=callback.createConfigSection(actionValidator);
 		if (newSection==null) {
-			return new LibSequenceConfigResult(null, 0, LSCERR_SECTION_GENERATION_ERROR, null, null);
+			throw new LibSequenceConfigException(LSCERR_SECTION_GENERATION_ERROR, null);
 		}
 
-		LibSequenceConfigResult result = newSection.checkSyntax();
-		if (result.hasError()) {
-			return result;
-		}
+		newSection.validateSyntax();
 
 		if (oldSection != null) {
 			sections.remove(oldSection);
 		}
 
 		sections.add(newSection);
-		return new LibSequenceConfigResult(null, 0, LSCERR_OK, null, null);
 	}
 	
 
 	// Removes a complete section including all of their sequences
 	// This is a admin function so you must authenticate yourself by giving me the callback object 
-	public LibSequenceConfigResult removeSection(LibSequenceCallback callback) {
+	public void removeSection(LibSequenceCallback callback) throws LibSequenceConfigException {
 		LibSequenceConfigSection sectionOld = findSection(callback);
 		if (sectionOld==null) {
-			return  new LibSequenceConfigResult(null, 0, LSCERR_SECTION_NOT_FOUND, null, null);
+			throw new LibSequenceConfigException(LSCERR_SECTION_NOT_FOUND, null);
 		}
 
 		sections.remove(sectionOld);
-		return new LibSequenceConfigResult(null, 0, LSCERR_OK, null, null);
 	}
 	
 }

@@ -7,9 +7,9 @@ import java.util.Set;
 import org.bukkit.entity.Player;
 
 import de.polarwolf.libsequence.callback.LibSequenceCallback;
-import de.polarwolf.libsequence.config.LibSequenceConfigResult;
+import de.polarwolf.libsequence.config.LibSequenceConfigException;
+import de.polarwolf.libsequence.runnings.LibSequenceRunException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
-import de.polarwolf.libsequence.runnings.LibSequenceRunResult;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public final class LibSequenceController {
@@ -24,9 +24,13 @@ public final class LibSequenceController {
  	}
  	
 
-	public List<String> getNames() {
- 		Set<String> names = sequencer.getSequenceNames(callback);
- 		return new ArrayList<>(names);
+	public List<String> getNames()  {
+		try {
+			Set<String> names = sequencer.getSequenceNames(callback);
+			return new ArrayList<>(names);
+		} catch (Exception e) {
+			return new ArrayList<>();			
+		}
  	}
  	
 
@@ -41,23 +45,23 @@ public final class LibSequenceController {
  	}
  	
 
-	public LibSequenceRunResult execute(String sequenceName, LibSequenceRunOptions runOptions) {
- 		return sequencer.executeOwnSequence(callback, sequenceName, runOptions);
+	public void execute(String sequenceName, LibSequenceRunOptions runOptions) throws LibSequenceRunException {
+ 		sequencer.executeOwnSequence(callback, sequenceName, runOptions);
  	}
  	
 
-	public LibSequenceRunResult cancel(String sequenceName) {
+	public int cancel(String sequenceName) {
  		return sequencer.cancelSequenceByName(callback, sequenceName);
  	}
  	
 
-	public Set<LibSequenceRunningSequence> queryRunningSequences() {
-		return sequencer.queryRunningSequences(callback);
+	public Set<LibSequenceRunningSequence> findRunningSequences() {
+		return sequencer.findRunningSequences(callback);
 	}
 
 
-	public LibSequenceConfigResult reload() {
- 		return sequencer.loadSection(callback);
+	public void reload() throws LibSequenceConfigException {
+ 		sequencer.loadSection(callback);
  	}
  
 }

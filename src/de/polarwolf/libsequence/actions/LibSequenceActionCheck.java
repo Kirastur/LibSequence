@@ -1,12 +1,13 @@
 package de.polarwolf.libsequence.actions;
 
-import static de.polarwolf.libsequence.actions.LibSequenceActionErrors.*;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import de.polarwolf.libsequence.checks.LibSequenceCheckResult;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
+import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public class LibSequenceActionCheck  extends LibSequenceActionGeneric {
@@ -15,36 +16,47 @@ public class LibSequenceActionCheck  extends LibSequenceActionGeneric {
 
 	
     @Override
-	public LibSequenceActionResult checkSyntax(LibSequenceConfigStep configStep) {
-    	return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_OK, null, null);
+	public boolean hasCheck() {
+    	return true;
     }
+
     
-	
+    @Override
+	public Set<String> getOptionalAttributes() {
+    	Set<String> myAttributes = new HashSet<>();
+    	myAttributes.add(KEYNAME_DENYMESSAGE);
+    	return myAttributes;
+	}
+
+
 	@Override
-	public LibSequenceActionResult doExecute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) {
+	public void execute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) throws LibSequenceException {
 
-		LibSequenceCheckResult checkResult = sequence.performChecks(configStep);
-		if (checkResult.hasError()) {
+		// Important: Under no circumstances a sequence can continue if the check result is undefined
+		// Therefore on an Exception during check we must cancel the sequence
+		try {
+			if (!sequence.performChecks(configStep)) {
 
-			String sDenyMessage;
-			CommandSender initiator = sequence.getRunOptions().getInitiator();
-			if (initiator instanceof Player) {
-				Player player = (Player)initiator;
-				sDenyMessage = configStep.getValueLocalized(KEYNAME_DENYMESSAGE, player.getLocale());
-			} else { 
-				sDenyMessage = configStep.getValue(KEYNAME_DENYMESSAGE);
-			}
-			sDenyMessage = sequence.resolvePlaceholder(sDenyMessage);
+				String sDenyMessage;
+				CommandSender initiator = sequence.getRunOptions().getInitiator();
+				if (initiator instanceof Player) {
+					Player player = (Player)initiator;
+					sDenyMessage = configStep.findValueLocalized(KEYNAME_DENYMESSAGE, player.getLocale());
+				} else { 
+					sDenyMessage = configStep.findValue(KEYNAME_DENYMESSAGE);
+				}
+				sDenyMessage = sequence.resolvePlaceholder(sDenyMessage);
 			
-			if (initiator != null) {
-				initiator.sendMessage(sDenyMessage);
-			}
+				if (initiator != null) {
+					initiator.sendMessage(sDenyMessage);
+				}
 			
+				sequence.cancel();
+			}
+		} catch (Exception e) {
 			sequence.cancel();
-			return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_CHECK_FAILED, null, checkResult);			
+			throw e;
 		}
-		
-    	return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_OK, null, null);
 	}
 
 }

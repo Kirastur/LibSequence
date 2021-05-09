@@ -24,63 +24,69 @@ public class LibSequenceConfigSequence {
 	private final String sequenceName;
 
 	// The security token is a sensitive element and therefore only private
-	private final String securityToken;
-	
-	protected final LibSequenceCallback callback;
-	protected final LibSequenceActionValidator actionValidator;
+	private String securityToken;
+	private final LibSequenceCallback callback;
 
-	protected final boolean hasEnumError;
+	protected final LibSequenceActionValidator actionValidator;
 
 	protected final ArrayList<LibSequenceConfigStep> steps = new ArrayList<>();
 		
 
-	public LibSequenceConfigSequence(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, String sequenceName, ConfigurationSection config) {
+	public LibSequenceConfigSequence(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, String sequenceName, ConfigurationSection config) throws LibSequenceConfigException {
 		this.callback=callback;
 		this.actionValidator=actionValidator;
 		this.sequenceName=sequenceName;
 		
-		hasEnumError=!loadStepsFromConfig(config);
-		securityToken=UUID.randomUUID().toString();
+		recreateSecurityToken(callback);
+		loadStepsFromConfig(config);
 	}
 	
 
-	public LibSequenceConfigSequence(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, String sequenceName, List<Map<String,String>> config) {
+	public LibSequenceConfigSequence(LibSequenceCallback callback, LibSequenceActionValidator actionValidator, String sequenceName, List<Map<String,String>> config) throws LibSequenceConfigException {
 		this.callback=callback;
 		this.actionValidator=actionValidator;
 		this.sequenceName=sequenceName;
 		
-		hasEnumError=!loadStepsFromList(config);	
-		securityToken=UUID.randomUUID().toString();
+		recreateSecurityToken(callback);
+		loadStepsFromList(config);	
+	}
+	
+	protected String stepNrToString (int stepNr) {
+		return "Step " + Integer.toString(stepNr);
 	}
 
 
-	protected boolean loadStepsFromConfig(ConfigurationSection config) {
-		int i = 1;
-		while(config.contains(Integer.toString(i), true)) {
+	// The bukkit ConfigurationSection is not able to detect duplicate keys
+	// so we cannot check for duplicate steps
+	protected void loadStepsFromConfig(ConfigurationSection config) throws LibSequenceConfigException {
+		for (int i = 1; i <= config.getKeys(false).size(); i++) {
+
+			if (!config.contains(Integer.toString(i), true)) {
+				throw new LibSequenceConfigException(getSequenceName(), LSCERR_STEP_ENUM, stepNrToString(i));
+			}
+
 			ConfigurationSection subConfig = config.getConfigurationSection(Integer.toString(i));
 			if (subConfig==null) {
-				return false;
+				throw new LibSequenceConfigException(getSequenceName(), LSCERR_STEP_ENUM, stepNrToString(i));
 			}
-			steps.add(new LibSequenceConfigStep(actionValidator, getSequenceName(), getSize()+1, subConfig));
-			i = i +1;
+
+			steps.add(new LibSequenceConfigStep(actionValidator, getSequenceName(), i, subConfig));
 		}
-		return (getSize()==(i-1));
 	}
 
 
-	protected boolean loadStepsFromList(List<Map<String,String>> config) {
+	protected void  loadStepsFromList(List<Map<String,String>> config) throws LibSequenceConfigException {
 		for (Map<String,String> stepTouples : config) {
 			if (stepTouples==null) {
-				return false;
+				throw new LibSequenceConfigException(getSequenceName(), LSCERR_STEP_ENUM, stepNrToString(getSize()+1));
 			}
 			steps.add(new LibSequenceConfigStep(actionValidator, getSequenceName(), getSize()+1, stepTouples));			
 		}
-		return true;
 	}
 	
 
 	// This method is final, so no one can override this to steal a foreign callback-object
-	public final boolean verifyAccess(LibSequenceCallback callbackToCheck) {
+	public final boolean hasAccess(LibSequenceCallback callbackToCheck) {
 		return callbackToCheck==callback;
 	}
 	
@@ -88,20 +94,27 @@ public class LibSequenceConfigSequence {
 	// The security token is needed to execute a sequence
 	// You can get it only if you are the owner of the sequence
 	// Only the owner knows the callback-object, so we use this as authentication method 
-	public String getSecurityToken (LibSequenceCallback callbackAsAuthentication) {
-		if (verifyAccess(callbackAsAuthentication)) { 
-			return securityToken;
-		} else {
-			return null;
+	public String getSecurityToken (LibSequenceCallback callbackAsAuthentication) throws LibSequenceConfigException {
+		if (!hasAccess(callbackAsAuthentication)) {
+			throw new LibSequenceConfigException(getSequenceName(), LSCERR_NOT_AUTHORIZED, null);
 		}
+		return securityToken;
 	}
 	
 
-	// Even it the security token is not known by others, 
-	// every plugin can verify if it has the correct one for this sequence
+	public final void recreateSecurityToken(LibSequenceCallback callbackAsAuthentication) throws LibSequenceConfigException {
+		if (!hasAccess(callbackAsAuthentication)) {
+			throw new LibSequenceConfigException(getSequenceName(), LSCERR_NOT_AUTHORIZED, null);
+		}		
+		securityToken=UUID.randomUUID().toString();
+	}
+	
+
+	// Even if the security token is not known by others, 
+	// every plugin can verify if it has the correct one for this sequence.
 	// This method is final, so no one can override this to steal a foreign token
 	// This is needed because we have a loop which cycles through all sequences to find the sequence fitting to a given token
-	public final boolean verifySecurityToken(String tokenToCheck) {
+	public final boolean isValidSecurityToken(String tokenToCheck) {
 		return securityToken.equals(tokenToCheck);
 	}
 
@@ -116,26 +129,16 @@ public class LibSequenceConfigSequence {
 	}
 	
 
+	// The boundary check is done by Java itself
 	public LibSequenceConfigStep getStep(int stepNr) {
-		if ((stepNr > 0) && (stepNr <= getSize())) {
-			return steps.get(stepNr-1);
-		} else  {
-			return null;
-		}
+		return steps.get(stepNr-1);
 	}
 	
 
-	public LibSequenceConfigResult checkSyntax() {
-		if (hasEnumError) {
-			return new LibSequenceConfigResult(getSequenceName(), 0, LSCERR_STEP_ENUM, null, null);
-		}
+	public void validateSyntax() throws LibSequenceConfigException {
 		for (LibSequenceConfigStep step : steps) {
-			LibSequenceConfigResult result = step.checkSyntax();
-			if (result.hasError()) {
-				return result;
-			}
+			step.validateSyntax();
 		}
-		return new LibSequenceConfigResult(getSequenceName(), 0, LSCERR_OK, null, null);		
 	}
 	
 }

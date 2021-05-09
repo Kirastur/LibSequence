@@ -10,14 +10,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import de.polarwolf.libsequence.api.LibSequenceController;
-import de.polarwolf.libsequence.config.LibSequenceConfigResult;
+import de.polarwolf.libsequence.config.LibSequenceConfigException;
 import de.polarwolf.libsequence.main.Main;
+import de.polarwolf.libsequence.runnings.LibSequenceRunException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
-import de.polarwolf.libsequence.runnings.LibSequenceRunResult;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 import static de.polarwolf.libsequence.commands.LibSequenceCommandMessages.*;
-import static de.polarwolf.libsequence.runnings.LibSequenceRunErrors.*;
 
 public class LibSequenceCommand implements CommandExecutor {
 
@@ -85,7 +84,7 @@ public class LibSequenceCommand implements CommandExecutor {
 	}
 	
 	protected List<String> listRunningSequences() {
-		Set<LibSequenceRunningSequence> sequences=controller.queryRunningSequences();
+		Set<LibSequenceRunningSequence> sequences=controller.findRunningSequences();
 		ArrayList<String> sequenceNames = new ArrayList<>();
 		for (LibSequenceRunningSequence sequence : sequences) {
 			sequenceNames.add(sequence.getName());
@@ -141,12 +140,16 @@ public class LibSequenceCommand implements CommandExecutor {
 		}
 		LibSequenceRunOptions runOptions = new LibSequenceRunOptions();
 		runOptions.setInitiator(sender);
-		LibSequenceRunResult result = controller.execute(sequenceName, runOptions);
-		if (result.hasError()) {
-			printError(sender,  result.toString());
-			return;
+		try {
+			controller.execute(sequenceName, runOptions);
+			printMessage(sender, MSG_SEQUENCE_STARTED, null);
+		} catch (LibSequenceRunException e) {
+			printError(sender, e.getTitle());
+			main.getLogger().warning(e.getMessageCascade());
+			if (e.hasJavaException()) {
+				e.printStackTrace();
+			}
 		}
-		printMessage(sender, MSG_SEQUENCE_STARTED, null);
 	}
 
 	protected void cmdCancel(CommandSender sender, String[] args) {
@@ -158,13 +161,9 @@ public class LibSequenceCommand implements CommandExecutor {
 			printMessage(sender, MSG_NO_SEQUENCE_PERMISSION, null);
 			return;
 		}
-		LibSequenceRunResult result = controller.cancel(sequenceName);
-		if (result.errorCode==LSRERR_NOT_FOUND) {
+		int i =	controller.cancel(sequenceName);
+		if (i == 0) {
 			printMessage(sender, MSG_NOT_RUNNING, null);
-			return;
-		}
-		if (result.hasError()) {
-			printError(sender,  result.toString());
 			return;
 		}
 		printMessage(sender, MSG_SEQUENCE_CANCELLED, null);
@@ -198,12 +197,16 @@ public class LibSequenceCommand implements CommandExecutor {
 		if (!checkNrOfArguments1(sender, args.length)) {
 			return;
 		}
-		LibSequenceConfigResult result = controller.reload();
-		if (result.hasError()) {
-			printError(sender,  result.toString());
-			return;
+		try {
+			controller.reload();
+			printMessage(sender, MSG_RELOAD, null);
+		} catch (LibSequenceConfigException e) {
+			printError(sender, e.getTitle());
+			main.getLogger().warning(e.getMessageCascade());
+			if (e.hasJavaException()) {
+				e.printStackTrace();
+			}
 		}
-		printMessage(sender, MSG_RELOAD, null);
 	}
 
 	@Override

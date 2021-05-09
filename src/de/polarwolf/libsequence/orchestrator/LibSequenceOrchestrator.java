@@ -5,13 +5,16 @@ import org.bukkit.plugin.Plugin;
 import de.polarwolf.libsequence.actions.LibSequenceActionBroadcast;
 import de.polarwolf.libsequence.actions.LibSequenceActionCheck;
 import de.polarwolf.libsequence.actions.LibSequenceActionCommand;
+import de.polarwolf.libsequence.actions.LibSequenceActionException;
 import de.polarwolf.libsequence.actions.LibSequenceActionInfo;
 import de.polarwolf.libsequence.actions.LibSequenceActionManager;
+import de.polarwolf.libsequence.actions.LibSequenceActionNone;
 import de.polarwolf.libsequence.actions.LibSequenceActionNotify;
 import de.polarwolf.libsequence.actions.LibSequenceActionTitle;
 import de.polarwolf.libsequence.chains.LibSequenceChainCommandblock;
 import de.polarwolf.libsequence.chains.LibSequenceChainManager;
 import de.polarwolf.libsequence.checks.LibSequenceCheckCondition;
+import de.polarwolf.libsequence.checks.LibSequenceCheckException;
 import de.polarwolf.libsequence.checks.LibSequenceCheckList;
 import de.polarwolf.libsequence.checks.LibSequenceCheckManager;
 import de.polarwolf.libsequence.checks.LibSequenceCheckOperator;
@@ -22,9 +25,11 @@ import de.polarwolf.libsequence.conditions.LibSequenceConditionBoolean;
 import de.polarwolf.libsequence.conditions.LibSequenceConditionManager;
 import de.polarwolf.libsequence.conditions.LibSequenceConditionNumeric;
 import de.polarwolf.libsequence.config.LibSequenceConfigManager;
+import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.includes.LibSequenceIncludeAll;
 import de.polarwolf.libsequence.includes.LibSequenceIncludeCondition;
 import de.polarwolf.libsequence.includes.LibSequenceIncludeConsole;
+import de.polarwolf.libsequence.includes.LibSequenceIncludeException;
 import de.polarwolf.libsequence.includes.LibSequenceIncludeInitiator;
 import de.polarwolf.libsequence.includes.LibSequenceIncludeList;
 import de.polarwolf.libsequence.includes.LibSequenceIncludeManager;
@@ -36,6 +41,7 @@ import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderAPI;
 import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderInternal;
 import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderManager;
 import de.polarwolf.libsequence.runnings.LibSequenceRunManager;
+import de.polarwolf.libsequence.syntax.LibSequenceSyntaxManager;
 
 public class LibSequenceOrchestrator {
 
@@ -44,13 +50,14 @@ public class LibSequenceOrchestrator {
 	protected final LibSequenceConditionManager conditionManager;
 	protected final LibSequenceCheckManager checkManager;
 	protected final LibSequenceIncludeManager includeManager;
+	protected final LibSequenceSyntaxManager syntaxManager;
 	protected final LibSequenceActionManager actionManager;
 	protected final LibSequenceConfigManager configManager;
 	protected final LibSequenceChainManager chainManager;
 	protected final LibSequenceRunManager runManager;
 	
 
-	public LibSequenceOrchestrator(Plugin plugin, LibSequenceStartOptions startOptions) {
+	public LibSequenceOrchestrator(Plugin plugin, LibSequenceStartOptions startOptions) throws LibSequenceException {
 		if (startOptions == null) {
 			startOptions = new LibSequenceStartOptions();
 		}
@@ -59,6 +66,7 @@ public class LibSequenceOrchestrator {
 		conditionManager = createConditionManager();
 		checkManager = createCheckManager();
 		includeManager = createIncludeManager();
+		syntaxManager = createSyntaxManager();
 		actionManager = createActionManager();
 		configManager = createConfigManager();
 		chainManager = createChainManager();
@@ -91,6 +99,10 @@ public class LibSequenceOrchestrator {
 	
 	public LibSequenceIncludeManager getIncludeManager() {
 		return includeManager;
+	}
+	
+	public LibSequenceSyntaxManager getSyntaxManager() {
+		return syntaxManager;
 	}
 	
 	public LibSequenceActionManager getActionManager() {
@@ -132,8 +144,12 @@ public class LibSequenceOrchestrator {
 		return new LibSequenceIncludeManager();
 	}
 	
+	protected LibSequenceSyntaxManager createSyntaxManager() {
+		return new LibSequenceSyntaxManager(getCheckManager(), getIncludeManager());
+	}
+	
 	protected LibSequenceActionManager createActionManager() {
-		return new LibSequenceActionManager();
+		return new LibSequenceActionManager(getSyntaxManager());
 	}
 
 	protected LibSequenceConfigManager createConfigManager() {
@@ -163,7 +179,7 @@ public class LibSequenceOrchestrator {
 		getConditionManager().registerCondition(new LibSequenceConditionNumeric());		
 	}
 	
-	protected void registerPredefinedChecks() {
+	protected void registerPredefinedChecks() throws LibSequenceCheckException {
 		getCheckManager().registerCheck("check_sendertype", new LibSequenceCheckSendertype());
 		getCheckManager().registerCheck("check_operator", new LibSequenceCheckOperator());
 		getCheckManager().registerCheck("check_permission", new LibSequenceCheckPermission());
@@ -174,7 +190,7 @@ public class LibSequenceOrchestrator {
 		getCheckManager().registerCheck("check_list", new LibSequenceCheckList());
 	}
 	
-	protected void registerPredefinedIncludes() {
+	protected void registerPredefinedIncludes() throws LibSequenceIncludeException {
 		getIncludeManager().registerInclude("include_console", new LibSequenceIncludeConsole());
 		getIncludeManager().registerInclude("include_operator", new LibSequenceIncludeOperator());
 		getIncludeManager().registerInclude("include_initiator", new LibSequenceIncludeInitiator());
@@ -187,7 +203,8 @@ public class LibSequenceOrchestrator {
 		getIncludeManager().registerInclude("include_all", new LibSequenceIncludeAll());
 	}
 	
-	protected void registerPredefinedActions(Boolean includeCommand) {
+	protected void registerPredefinedActions(Boolean includeCommand) throws LibSequenceActionException {
+		getActionManager().registerAction("none", new LibSequenceActionNone());
 		getActionManager().registerAction("broadcast", new LibSequenceActionBroadcast());
 		getActionManager().registerAction("info", new LibSequenceActionInfo());
 		getActionManager().registerAction("notify", new LibSequenceActionNotify());

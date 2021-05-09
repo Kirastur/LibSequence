@@ -5,12 +5,11 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import de.polarwolf.libsequence.actions.LibSequenceActionResult;
 import de.polarwolf.libsequence.actions.LibSequenceActionValidator;
-import de.polarwolf.libsequence.checks.LibSequenceCheckErrors;
-import de.polarwolf.libsequence.checks.LibSequenceCheckResult;
+import de.polarwolf.libsequence.config.LibSequenceConfigException;
 import de.polarwolf.libsequence.config.LibSequenceConfigSection;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
+import de.polarwolf.libsequence.runnings.LibSequenceRunException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
 public class LibSequenceCallbackGeneric implements LibSequenceCallback{
@@ -47,8 +46,8 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 		return SECTION_NAME_SEQUENCES;
 	}
 	
-	// Overwrite this if you want to import the section config from another place than the config-file
-	public ConfigurationSection getConfigurationSection () {
+	// Overwrite this if you want to import the section config from another file than the standard plugin config-file
+	public ConfigurationSection getConfigurationSection() {
 		plugin.reloadConfig();
 		ConfigurationSection sectionRoot = plugin.getConfig().getRoot();
 		if (!sectionRoot.contains (getSectionIdentifier(), true)) {
@@ -59,7 +58,7 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	
 	// Overwrite this if you want to extend the config handling itself
 	@Override
-	public LibSequenceConfigSection createConfigSection (LibSequenceActionValidator actionValidator) {
+	public LibSequenceConfigSection createConfigSection (LibSequenceActionValidator actionValidator) throws LibSequenceConfigException {
 		ConfigurationSection config = getConfigurationSection();
 		if (config==null) {
 			return null;
@@ -72,29 +71,24 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	// Error handling
 	//
 	
-	// Print a notification if a check-step returns a FALSE
-	public void printCheckFailed(String messageText) {
-		plugin.getLogger().info("CHECK " + messageText);				
-	}
-	
-	// Print a warning if an error occurs during sequence execution
-	public void printError(String errorText) {
-		plugin.getLogger().warning("ERROR "  + errorText);
-		
-	}
-		
-	// Override this for custom error handling
-	public void onExecutionError(LibSequenceRunningSequence secuence, LibSequenceActionResult actionError) {
-		if (actionError.getSubResult() instanceof LibSequenceCheckResult) {
-			LibSequenceCheckResult checkError = (LibSequenceCheckResult)actionError.getSubResult();
-			if (checkError.errorCode == LibSequenceCheckErrors.LSCERR_FALSE) {
-				printCheckFailed(actionError.toString());
-				return;
-			}
+	// Print an info in an check fails
+	public void onCheckFailed(LibSequenceRunningSequence sequence, String checkName, String failMessage) {
+		if (enableConsoleNotifications) {
+			String sequenceName = sequence.getName();
+			int stepNr = sequence.getStepNr();
+			String messageText = "Check failed: " + sequenceName + ": Step " + Integer.toString(stepNr) + ": " + checkName + ": " + failMessage;
+			plugin.getLogger().info(messageText);
 		}
-		printError(actionError.toString());
 	}
 	
+	// Print an waring and optional StackTrace on Error
+	public void onExecutionError(LibSequenceRunningSequence secuence, LibSequenceRunException e) {
+		plugin.getLogger().warning(e.getMessageCascade());
+		if (e.hasJavaException()) {
+			e.printStackTrace();
+		}
+	}
+
 
 	//
 	// Task creation
@@ -126,7 +120,7 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	
 	@Override
 	public void debugSequenceStepReached(LibSequenceRunningSequence sequence, LibSequenceConfigStep step) {
-		printSequenceMessage(sequence, "has reached Step "+sequence.getStepNr()+" and will now execute "+step.getActionName());
+		printSequenceMessage(sequence, "has reached Step "+sequence.getStepNr()+" and will now execute "+step.findActionName());
 	}
 
 	@Override

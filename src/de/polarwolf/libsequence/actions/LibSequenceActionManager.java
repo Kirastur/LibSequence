@@ -5,32 +5,36 @@ import java.util.Map;
 
 import de.polarwolf.libsequence.config.LibSequenceConfigSequence;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
+import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
+import de.polarwolf.libsequence.syntax.LibSequenceSyntaxManager;
+
 
 import static de.polarwolf.libsequence.actions.LibSequenceActionErrors.*;
 
 public class LibSequenceActionManager {
 
-	protected final Map<String, LibSequenceAction> actionMap = new HashMap <>();
+	protected final LibSequenceSyntaxManager syntaxManager;
 	
-
-	public boolean hasAction(String actionName) {
-		for (String actionKey: actionMap.keySet()) {
-			if (actionName.equals(actionKey)) {
-				return true;
-			}
-		}
-		return false;
+	protected Map<String, LibSequenceAction> actionMap = new HashMap <>();
+	
+	
+	public LibSequenceActionManager(LibSequenceSyntaxManager syntaxManager) {
+		this.syntaxManager = syntaxManager;
 	}
 	
 
-	public LibSequenceActionResult registerAction(String actionName, LibSequenceAction action) {
+	public boolean hasAction(String actionName) {
+		return actionMap.containsKey(actionName);
+	}
+	
+
+	public void registerAction(String actionName, LibSequenceAction action) throws LibSequenceActionException {
 		if (hasAction(actionName)) {
-			return new LibSequenceActionResult(null, actionName, LSAERR_ACTION_ALREADY_EXISTS, null, null);
+			throw new LibSequenceActionException(actionName, LSAERR_ACTION_ALREADY_EXISTS, null);
 		}
 		actionMap.put(actionName, action);
-		return new LibSequenceActionResult(null, actionName, LSAERR_OK, null, null);
 	}
 	
 
@@ -42,8 +46,12 @@ public class LibSequenceActionManager {
 	}
 
 
-	public LibSequenceAction getActionByName (String actionName) {
-		return actionMap.get(actionName);
+	public LibSequenceAction getActionByName (String actionName) throws LibSequenceActionException {
+		LibSequenceAction action = actionMap.get(actionName);
+		if (action == null) {
+			throw new LibSequenceActionException(null, LSAERR_ACTION_NOT_FOUND, actionName);						
+		}
+		return action;
 	}
 	
 
@@ -68,42 +76,64 @@ public class LibSequenceActionManager {
 	}
     
 
-	// We expect to have a valid actionName here
-    // This must be done in the configStep syntaxCheck before calling this
-	// Check is done on Load and before sequence start 
-    public LibSequenceActionResult validateAction(LibSequenceConfigStep configStep) {
-    	LibSequenceAction action = getActionByName(configStep.getActionName());
-    	if (action==null) {
-			return new LibSequenceActionResult(configStep.getSequenceName(), configStep.getActionName(), LSAERR_ACTION_NOT_FOUND, null, null);
+    public void validateSyntax(LibSequenceConfigStep configStep) throws LibSequenceActionException {
+    	String actionName = configStep.findActionName();
+    	LibSequenceAction action = getActionByName(actionName);
+    	
+    	try {
+    		if (!action.skipAttributeVerification()) {
+    			syntaxManager.performAttributeVerification(action, configStep);
+    		}
+    		action.validateSyntax(configStep);
+    	} catch (LibSequenceActionException e) {
+    		throw e;
+    	} catch (LibSequenceException e) {
+    		throw new LibSequenceActionException(actionName, e);
+    	} catch (Exception e) {
+    		throw new LibSequenceActionException(actionName, LSAERR_JAVA_EXCEPTION, null, e);
     	}
-    	return action.checkSyntax(configStep);
 	}
-    
 
-    public LibSequenceActionResult checkAuthorization(LibSequenceRunOptions runOptions, LibSequenceConfigSequence configSequence) {
+ 
+    public void validateAuthorization(LibSequenceRunOptions runOptions, LibSequenceConfigSequence configSequence) throws LibSequenceActionException {
     	for (int i=1; i<= configSequence.getSize(); i++) {
-    		LibSequenceConfigStep configStep = configSequence.getStep(i);
-        	LibSequenceAction action = getActionByName(configStep.getActionName());
-        	if (action==null) {
-    			return new LibSequenceActionResult(configSequence.getSequenceName(), configStep.getActionName(), LSAERR_ACTION_NOT_FOUND, null, null);
+    		String actionName = "";
+        	try {
+        		LibSequenceConfigStep configStep = configSequence.getStep(i);
+        		actionName = configStep.findActionName();
+        		LibSequenceAction action = getActionByName(actionName);
+        		action.validateAuthorization(runOptions, configStep);
+        	} catch (LibSequenceActionException e) {
+        		throw e;
+        	} catch (LibSequenceException e) {
+        		throw new LibSequenceActionException(actionName, e);
+        	} catch (Exception e) {
+        		throw new LibSequenceActionException(actionName, LSAERR_JAVA_EXCEPTION, null, e);
         	}
-        	if (!action.isAuthorized(runOptions, configStep)) {
-    			return new LibSequenceActionResult(configSequence.getSequenceName(), configStep.getActionName(), LSAERR_NOT_AUTHORIZED, null, null);
-        	}    		
     	}
-    	return new LibSequenceActionResult(configSequence.getSequenceName(), null, LSAERR_OK, null, null);
     }
     
 
     // First we must check if the sequence belongs to my instance
     // We expect a syntaxCheck() before, so we know the action is valid here
     // We expect authorization is done before, so we don't need to check here
-	public LibSequenceActionResult doExecute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) {
-		LibSequenceAction action = getActionByName(configStep.getActionName());
+	public void execute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) throws LibSequenceActionException {
+		String actionName = configStep.findActionName();
+		LibSequenceAction action = getActionByName(actionName);
+
 		if (!configStep.isSameInstance(getActionValidator())) {
-			return new LibSequenceActionResult(sequence.getName(), configStep.getActionName(), LSAERR_WRONG_INSTANCE, null, null);
+			throw new LibSequenceActionException(actionName, LSAERR_WRONG_INSTANCE, null);
 		}
-		return action.doExecute(sequence, configStep);
+		
+		try {
+			action.execute(sequence, configStep);
+    	} catch (LibSequenceActionException e) {
+    		throw e;
+    	} catch (LibSequenceException e) {
+    		throw new LibSequenceActionException(actionName, e);
+    	} catch (Exception e) {
+    		throw new LibSequenceActionException(actionName, LSAERR_JAVA_EXCEPTION, null, e);
+    	}
 	}
 	
 }

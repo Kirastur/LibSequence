@@ -60,7 +60,7 @@ public class LibSequenceChainCommandblock implements Listener, LibSequenceChain 
 
 	
 	// Low-level functions to handle the interaction-list
-	protected void cleanupChain() {
+	protected void cleanupChainInteractions() {
 		long cutover = System.currentTimeMillis() - LIMIT_TIMEFRAME;
 		Iterator<LibSequenceChainInteraction> i = chainInteractions.iterator();
 		while (i.hasNext()) {
@@ -73,7 +73,7 @@ public class LibSequenceChainCommandblock implements Listener, LibSequenceChain 
 
 	
 	protected void addChainInteraction(CommandSender sender, Block target) {
-		cleanupChain();
+		cleanupChainInteractions();
 		chainInteractions.add(new LibSequenceChainInteraction(sender, target));
 	}
 	
@@ -127,7 +127,7 @@ public class LibSequenceChainCommandblock implements Listener, LibSequenceChain 
 	public boolean resolveChain(LibSequenceRunOptions runOptions) {
 
 		// cleanup list now, so we don't deed to care about Timeframe
-		cleanupChain();
+		cleanupChainInteractions();
 		
 		// Check if initiator is given
 		if (runOptions.getInitiator() == null) {

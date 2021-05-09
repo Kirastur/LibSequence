@@ -10,16 +10,17 @@ import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
+import de.polarwolf.libsequence.exception.LibSequenceException;
+
 public class LibSequenceIntegrationWorldguard {
 	
-	public static final int ERR_OK = 0;
-	public static final int ERR_PLAYEROUTSIDE = 1;
-	public static final int ERR_GENERIC = -1;
-	public static final int ERR_NOWORLD = -2;
-	public static final int ERR_NOREGION = -3;
+	public static final String WORLDGUARD_NAME = "WorldGuard";
+	public static final String  ERR_GENERIC = "generic region error";
+	public static final String  ERR_NOWORLD = "world not found";
+	public static final String  ERR_NOREGION = "region not found";
 	
 
-	protected RegionManager getRegionManager(World world) {
+	protected RegionManager getRegionManager(World world) throws LibSequenceIntegrationException {
 		try {
 			return WorldGuard
 				.getInstance()
@@ -27,43 +28,48 @@ public class LibSequenceIntegrationWorldguard {
 				.getRegionContainer()
 				.get(BukkitAdapter.adapt(world));
 		} catch (Exception e) {
-			return null;
+			throw new LibSequenceIntegrationException(WORLDGUARD_NAME, LibSequenceException.JAVA_EXCEPTION, e.getMessage(), e);
 		}		
 	}
 	
 
-	protected ProtectedRegion getRegion(RegionManager regionManager, String regionName) {
+	protected ProtectedRegion getRegion(RegionManager regionManager, String regionName) throws LibSequenceIntegrationException {
 		try {
 			return regionManager.getRegion(regionName);
 		} catch (Exception e) {
-			return null;
+			throw new LibSequenceIntegrationException(WORLDGUARD_NAME, LibSequenceException.JAVA_EXCEPTION, e.getMessage(), e);
 		}		
 	}
 	
+	protected boolean contains(ProtectedRegion protectedRegion, BlockVector3 vector) throws LibSequenceIntegrationException {
+		try {
+			return protectedRegion.contains (vector); 
+		} catch (Exception e) {
+			throw new LibSequenceIntegrationException(WORLDGUARD_NAME, LibSequenceException.JAVA_EXCEPTION, e.getMessage(), e);
+		}
+	}
+	
 
-	public int testPlayer(Player player, String regionName) {
+	public boolean testPlayer(Player player, String regionName) throws LibSequenceIntegrationException {
 		if ((player == null) || (regionName == null) || (regionName.isEmpty())) {
-			return ERR_GENERIC;
+			throw new LibSequenceIntegrationException(WORLDGUARD_NAME, ERR_GENERIC, null);
 		}
 
 		World world = player.getWorld();
 		RegionManager regionManager = getRegionManager(world);
 		if (regionManager == null) {
-			return ERR_NOWORLD;
+			throw new LibSequenceIntegrationException(WORLDGUARD_NAME, ERR_NOWORLD, null);
 		}
 		
 		ProtectedRegion protectedRegion = getRegion(regionManager, regionName);
 		if (protectedRegion == null) {
-			return ERR_NOREGION;
+			throw new LibSequenceIntegrationException(WORLDGUARD_NAME, ERR_NOREGION, regionName);
 		}
 		
     	Location location = player.getLocation();
     	BlockVector3 vector = BlockVector3.at(location.getX(), location.getY(), location.getZ());
-    	if (!protectedRegion.contains (vector)) {
-    		return ERR_PLAYEROUTSIDE;
-    	}
-    	
-    	return ERR_OK;
+
+    	return contains(protectedRegion, vector);
 	}
 
 }
