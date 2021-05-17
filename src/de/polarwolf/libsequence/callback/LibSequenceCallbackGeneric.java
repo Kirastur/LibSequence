@@ -1,6 +1,8 @@
 package de.polarwolf.libsequence.callback;
 
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -9,15 +11,17 @@ import de.polarwolf.libsequence.actions.LibSequenceActionValidator;
 import de.polarwolf.libsequence.config.LibSequenceConfigException;
 import de.polarwolf.libsequence.config.LibSequenceConfigSection;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
+import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
-public class LibSequenceCallbackGeneric implements LibSequenceCallback{
+public class LibSequenceCallbackGeneric implements LibSequenceCallbackExtended{
 	
 	private static final String SECTION_NAME_SEQUENCES = "sequences";
 	
 	protected final Plugin plugin;
-	protected final boolean enableConsoleNotifications;
+	protected boolean enableConsoleNotifications;
+	protected boolean enableInitiatorNotifications;
 
 	
 	//
@@ -28,15 +32,39 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	public LibSequenceCallbackGeneric(Plugin plugin) {
 		this.plugin=plugin;
 		this.enableConsoleNotifications = false;
+		this.enableInitiatorNotifications = false;
 	}
 	
-	// 2. Option: Create the object and select if you want to printout debug messages to server console
-	public LibSequenceCallbackGeneric(Plugin plugin, boolean enableConsoleNotifications) {
-		this.plugin=plugin;
+	
+	//
+	// Callback Options
+	//
+	
+	public boolean isEnableConsoleNotifications() {
+		return enableConsoleNotifications;
+	}
+
+	public void setEnableConsoleNotifications(boolean enableConsoleNotifications) {
 		this.enableConsoleNotifications = enableConsoleNotifications;
 	}
+
+	public boolean isEnableInitiatorNotifications() {
+		return enableInitiatorNotifications;
+	}
+
+	public void setEnableInitiatorNotifications(boolean enableInitiatorNotifications) {
+		this.enableInitiatorNotifications = enableInitiatorNotifications;
+	}
+
+
+	// If you want to register some of your sequences in a directory
+	// the directory needs a displayable identifier for the sequence-owner.
+	// Normally we would simply return the Plugin-Name here.
+	public String getOwnerName() {
+		return plugin.getName();
+	}
 	
-	
+
 	//
 	// Load sequences
 	//
@@ -47,7 +75,7 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	}
 	
 	// Overwrite this if you want to import the section config from another file than the standard plugin config-file
-	public ConfigurationSection getConfigurationSection() {
+	protected ConfigurationSection getConfigurationSection() {
 		plugin.reloadConfig();
 		ConfigurationSection sectionRoot = plugin.getConfig().getRoot();
 		if (!sectionRoot.contains (getSectionIdentifier(), true)) {
@@ -59,39 +87,16 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	// Overwrite this if you want to extend the config handling itself
 	@Override
 	public LibSequenceConfigSection createConfigSection (LibSequenceActionValidator actionValidator) throws LibSequenceConfigException {
-		ConfigurationSection config = getConfigurationSection();
-		if (config==null) {
+		ConfigurationSection configurationSection = getConfigurationSection();
+		if (configurationSection==null) {
 			return null;
 		}
-		return new LibSequenceConfigSection(this, actionValidator, config);
+		return new LibSequenceConfigSection(this, actionValidator, configurationSection);
 	}
 	
 
 	//
-	// Error handling
-	//
-	
-	// Print an info in an check fails
-	public void onCheckFailed(LibSequenceRunningSequence sequence, String checkName, String failMessage) {
-		if (enableConsoleNotifications) {
-			String sequenceName = sequence.getName();
-			int stepNr = sequence.getStepNr();
-			String messageText = "Check failed: " + sequenceName + ": Step " + Integer.toString(stepNr) + ": " + checkName + ": " + failMessage;
-			plugin.getLogger().info(messageText);
-		}
-	}
-	
-	// Print an waring and optional StackTrace on Error
-	public void onExecutionError(LibSequenceRunningSequence secuence, LibSequenceRunException e) {
-		plugin.getLogger().warning(e.getMessageCascade());
-		if (e.hasJavaException()) {
-			e.printStackTrace();
-		}
-	}
-
-
-	//
-	// Task creation
+	// Run Sequence (Task creation)
 	//
 	
 	// No need to overwrite this
@@ -102,6 +107,52 @@ public class LibSequenceCallbackGeneric implements LibSequenceCallback{
 	}
 	
 	
+	//
+	// Error handling
+	//
+	
+	// Print an info in an check fails
+	@Override
+	public void onCheckFailed(LibSequenceRunningSequence sequence, String checkName, String failMessage) {
+		if (enableConsoleNotifications) {
+			String sequenceName = sequence.getName();
+			int stepNr = sequence.getStepNr();
+			String messageText = "Check failed: " + sequenceName + ": Step " + Integer.toString(stepNr) + ": " + checkName + ": " + failMessage;
+			plugin.getLogger().info(messageText);
+		}
+	}
+	
+	// Print an info if it seems that a placeholder was not resolved
+	@Override
+	public void onPlaceholderWarn(LibSequenceRunningSequence sequence, String attributeName, String valueText) {
+		if (enableConsoleNotifications) {
+			String sequenceName = sequence.getName();
+			int stepNr = sequence.getStepNr();
+			String messageText = "Possible placeholder did not resolve: " + sequenceName + ": Step " + Integer.toString(stepNr) + ": " + attributeName + ": " + valueText;
+			plugin.getLogger().info(messageText);
+		}
+	}
+	
+	@Override
+	public void printException(LibSequenceException e) {
+		plugin.getLogger().warning(e.getMessageCascade());
+		if (e.hasJavaException()) {
+			e.printStackTrace();
+		}		
+	}
+		
+	// Print an waring and optional StackTrace on Error
+	public void onExecutionError(LibSequenceRunningSequence sequence, LibSequenceRunException e) {
+		if (enableInitiatorNotifications) {
+			CommandSender initiator = sequence.getRunOptions().getInitiator();
+			if (initiator instanceof Player) {
+				initiator.sendMessage(e.getMessage());
+			}
+		}
+		printException(e);
+	}
+
+
 	//
 	// Debug messages
 	//

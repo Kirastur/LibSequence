@@ -58,20 +58,20 @@ public class LibSequenceSequencer {
 
 
 	// RunManager Interface
-	public LibSequenceRunningSequence executeForeignSequence(LibSequenceCallback callback, String securityToken, LibSequenceRunOptions runOptions) throws LibSequenceRunException {
+	public LibSequenceRunningSequence executeForeignSequence(LibSequenceCallback runnerCallback, String securityToken, LibSequenceRunOptions runOptions) throws LibSequenceRunException {
 		LibSequenceConfigSequence sequence = orchestrator.getConfigManager().findForeignSequence(securityToken);
 		if (sequence==null) {
 			throw new LibSequenceRunException(null, 0, LSRERR_NOT_FOUND, null);
 		}
-		return orchestrator.getRunManager().execute(callback, sequence, securityToken, runOptions);
+		return orchestrator.getRunManager().execute(runnerCallback, sequence, securityToken, runOptions);
 	}
 	
 
-	public LibSequenceRunningSequence executeOwnSequence(LibSequenceCallback callback, String sequenceName, LibSequenceRunOptions runOptions) throws LibSequenceRunException  {
+	public LibSequenceRunningSequence executeOwnSequence(LibSequenceCallback ownerCallback, String sequenceName, LibSequenceRunOptions runOptions) throws LibSequenceRunException  {
 		try {
-			LibSequenceConfigSequence sequence = orchestrator.getConfigManager().getOwnSequence(callback, sequenceName);
-			String securityToken = sequence.getSecurityToken(callback);
-			return orchestrator.getRunManager().execute(callback, sequence, securityToken, runOptions);
+			LibSequenceConfigSequence sequence = orchestrator.getConfigManager().getOwnSequence(ownerCallback, sequenceName);
+			String securityToken = sequence.getSecurityToken(ownerCallback);
+			return orchestrator.getRunManager().execute(ownerCallback, sequence, securityToken, runOptions);
 		} catch (LibSequenceConfigException e) {
 			throw new LibSequenceRunException(null, 0, LSRERR_NOT_FOUND, null);
 		}
@@ -83,24 +83,34 @@ public class LibSequenceSequencer {
 	}
 	
 
-	public int cancelSequenceByName(LibSequenceCallback callback, String sequenceName) {
-		return orchestrator.getRunManager().cancelByName(callback, sequenceName);
+	public int cancelSequenceByName(LibSequenceCallback runnerCallback, String sequenceName) {
+		return orchestrator.getRunManager().cancelByName(runnerCallback, sequenceName);
 	}
 	
 
-	public Set<LibSequenceRunningSequence> findRunningSequences(LibSequenceCallback callback) {
-		return orchestrator.getRunManager().findRunningSequences(callback);
+	public Set<LibSequenceRunningSequence> findRunningSequences(LibSequenceCallback runnerCallback) {
+		return orchestrator.getRunManager().findRunningSequences(runnerCallback);
+	}
+	
+
+	public Set<LibSequenceRunningSequence> sneakRunningSequencesOwnedByMe(LibSequenceCallback ownerCallback) {
+		return orchestrator.getRunManager().sneakRunningSequencesOwnedByMe(ownerCallback);
 	}
 
 
 	// ConfigManager Interface
+	public void preregisterSection(LibSequenceCallback callback) {
+		orchestrator.getConfigManager().preregisterSection(callback);		
+	}
+	
+	
 	public void loadSection(LibSequenceCallback callback) throws LibSequenceConfigException {
 		orchestrator.getConfigManager().loadSection(callback);
 	}
 	
 
-	public void removeSection(LibSequenceCallback callback) throws LibSequenceConfigException {
-		orchestrator.getConfigManager().removeSection(callback);
+	public void unregisterSection(LibSequenceCallback callback) throws LibSequenceConfigException {
+		orchestrator.getConfigManager().unregisterSection(callback);
 	}
 	
 

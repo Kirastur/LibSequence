@@ -85,10 +85,13 @@ public class LibSequenceRunningSequence {
 	}
 	
 
-	public final boolean hasAccess(LibSequenceCallback callbackToCheck) {
-		return configSequence.hasAccess(callbackToCheck);
+	public final boolean isOwner(LibSequenceCallback callbackToCheck) {
+		return configSequence.isOwner(callbackToCheck);
 	}
 
+	public final boolean isRunner(LibSequenceCallback callbackToCheck) {
+		return callbackToCheck == callback;
+	}
 	
 	// Gateway to PlaceholderManager
 	// RunManager takes care if the messageText is null

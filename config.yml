@@ -1,10 +1,12 @@
-# - There are more possible ways to run this plugin
-# -   1. Use commands with local sequences
-# -   2. Use API with local sequences
-# -   3. Use API with the shared sequencer
-# -   4. Use private sequencers (no API needed)
+# - There are more possible ways to start and stop sequences
+# -   1. Use minecraft commands
+# -   2. Use API to control
+# -       a) Local sequenes defined in LibSequence's config.yml
+# -       b) Sequences published by other plugins in the Directory
+# -       c) Your own squences using the Shared Sequencer   
+# -   3. Use private sequencers (java-objects)
 # -
-# - Furthermore you can register you own actions, available for all
+# - Furthermore you can register you own actions, checls, includes etc.
 # - 
 # - If this is not enough customizing for you,
 # -   you can extend the the function of the sequencer
@@ -37,30 +39,32 @@ startup:
    # -   specific sequence to be allowed to start them.
    # - 
    # - If set to false, the following commands are disabled:
-   # -     libsequence
+   # -     sequence
    # -
-   # - Even if false, sequences can be started by API (if controlAPI is enabled).
+   # - Even if false, sequences can be started by API (if API is enabled).
    enableCommands: true
   
-   # Allow API to start and cancel local sequences
+   # Allow API to start and cancel sequences
    #
-   # - If local sequences are started via API, no permission check is done.
-   # - if this option is disabled, local sequences can only be start using commands.
-   # - If both commands and API is disabled, the local sequences are not loaded anyway.
-   enableControlAPI: true
-
-   # Enable the API-access to the shared Sequencer,
-   #   so plugins have access to a shared pool of sequences.
-   #
-   # - If enabled this, you can use the buildin shared sequencer,
-   # -   so you do not need to setup a private sequencer in your plugin.
-   # - Sequences from other plugins can only be run if you have their SecurityToken.
-   # -
-   # - If all enableCommands, enableControlAPI and enableSequenceAPI are disabled
+   # - If sequences are started via API, no permission check is done.
+   # - if these options are disabled, sequences can only be start using commands.
+   # - 
+   # - If all APIs and commands are disabled
    # -   the complete shared scheduler is not loaded anyway,
-   # -   so only private sequencers are possible.
-   enableSequencerAPI: true
+   # -   so only private sequencers with java-objects are possible.
   
+   # - Simple High-Level API to startd predefined sequences with small effort
+   enableControllerAPI: true
+   
+   # - Register your own sequences in the public direcoty
+   # - and start sequences published there from other plugins
+   enableDirectoryAPI: true
+   
+   # - Use the Shared Sequencer to access all features LibSequence offers.
+   # - The Shared Sequencer shares custom actions, checks, includes etc. between all
+   # -   plugins using the SequencerAPI. 
+   enableSequencerAPI: true
+
    # - The LibSequencer is not designed to prohibit the use of private sequencers,
    # -   so there is no config option to prevent this.
 
@@ -92,7 +96,7 @@ orchestrator:
 
 # Configure options for the high-level ControllerAPI
 #
-# - This also affects the /libsequence commands 
+# - This also affects the /sequence commands 
 controller:
 
    # Enbale Debug
@@ -105,13 +109,25 @@ controller:
    #
    # - If enabled, these messages are printout to the server console
    # - If disabled, these messages are thrown away
+   # -
+   # -  If an error occures during sequence execution,
+   # -  the sender (Player) gets notified if enabled.
+   # -
+   # - If you need more control about Debug, you must use
+   # - you own callback-object together with SequencerAPI
+   # 
    enableDebugOutput: true
+   
+   # - Register the sequences defined in the "sequences" section of
+   # - LibSequence's config.yml in the public directory
+   publishLocalSequences: true
   
  
 # OK, now let's define the sequences. Per default, only a "demo" sequence is here
 #
 # - You may optionally quote the Strings with "" if the parser has any problems
 # - Sequence names are case-sensitive
+#
 sequences:
 
    demo:
@@ -132,22 +148,23 @@ sequences:
 
 # Define translation of messages
 # 
-# - The messages here are only used for the /libsequence command
+# - The messages here are only used for the /sequence command
 # - they do not affect ControllerAPI or SequencerAPI
 #
 # - If no translation is defied, the default english messages are used 
 messages:
    de_de:
-      MSG_UNKNOWN_OPTION: "Unbekannte Option. Rufe mit '/libsequence help' die möglichen Optionen auf"
-      MSG_UNKNOWN_SEQUENCE: "Unbekannte Sequence. Eine Liste der verfügbaren Sequences gibt es mit '/libsequence list'"
-      MSG_OPTION_NAME_MISSING: "Keine Option angegeben. '/libsequence help' listet Dir die möglichen Optionen auf"
+      MSG_UNKNOWN_OPTION: "Unbekannte Option. Rufe mit '/sequence help' die möglichen Optionen auf"
+      MSG_UNKNOWN_SEQUENCE: "Unbekannte Sequence. Eine Liste der verfügbaren Sequences gibt es mit '/sequence list'"
+      MSG_OPTION_NAME_MISSING: "Keine Option angegeben. '/sequence help' listet Dir die möglichen Optionen auf"
       MSG_SEQUENCE_NAME_MISSING: "Der Sequence-Name muß angegeben werden"
       MSG_NO_OPTION_PERMISSION: "Du hast keine Berechtigung für diese Option"
       MSG_NO_SEQUENCE_PERMISSION: "Du hast keine Berechtigung für diese Sequence"
       MSG_TOO_MANY_PARAMETERS: "Zu viele Parameter"
       MSG_NOT_RUNNING: "Keine laufenden Sequences gefunden"
-      MSG_OPTION_FORBIDDEN: "Du hast auf keine Optionen Rechte"
+      MSG_OPTION_FORBIDDEN: "Du hast auf keine Optionen hier Rechte"
       MSG_SEQUENCE_FORBIDDEN: "Du hast keinen Zugriff auf Sequences"
+      MSG_GENERAL_ERROR: "Fehler: "
 
       MSG_SEQUENCE_STARTED: "Die Sequence wurde gestartet"
       MSG_SEQUENCE_CANCELLED: "Die Sequence wurde abgebrochen"

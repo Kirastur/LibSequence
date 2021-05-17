@@ -38,6 +38,13 @@ public class LibSequenceConfigSection {
 		this.actionValidator=actionValidator;
 		loadSequencesFromMap(config);
 	}
+	
+	
+	// create a dummy section
+	public LibSequenceConfigSection(LibSequenceCallback callback, LibSequenceActionValidator actionValidator) {
+		this.callback=callback;
+		this.actionValidator=actionValidator;
+	}
 
 
 	protected void loadSequencesFromConfig(ConfigurationSection config) throws LibSequenceConfigException {
@@ -75,7 +82,7 @@ public class LibSequenceConfigSection {
 	// So we have implemented a method to check this
 	// This method is final, so no one can override this to steal the callback
 	// This is needed because we have a loop which cycles through all sections to find the section fitting to the given callback
-	public final boolean hasAccess(LibSequenceCallback callbackToCheck) {
+	public final boolean isOwner(LibSequenceCallback callbackToCheck) {
 		return callbackToCheck==callback;
 	}	
 

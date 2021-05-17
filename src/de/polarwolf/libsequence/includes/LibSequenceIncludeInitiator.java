@@ -1,7 +1,5 @@
 package de.polarwolf.libsequence.includes;
 
-import static de.polarwolf.libsequence.includes.LibSequenceIncludeErrors.*;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,7 +18,7 @@ public class LibSequenceIncludeInitiator  implements LibSequenceInclude {
 		Set<CommandSender> senders = new HashSet<>();
 		CommandSender initiator = runningSequence.getRunOptions().getInitiator();
 		if (initiator == null) {
-			throw new LibSequenceIncludeException(includeName, LSIERR_NO_INITIATOR, null);			
+			return senders;
 		}
 		
 		if (runningSequence.resolveCondition(valueText) ^ inverseSearch) { 

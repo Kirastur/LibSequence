@@ -23,7 +23,7 @@ public class LibSequenceIncludeList  implements LibSequenceInclude {
 		}
 
 		String[] playerNames = valueText.split(", ");
-		for (String playerName : playerNames ) {
+		for (String playerName : playerNames) {
 			if (!playerName.isEmpty()) {
 				Player player = runningSequence.getPlugin().getServer().getPlayer(playerName);
 				if (player != null) {
@@ -32,7 +32,17 @@ public class LibSequenceIncludeList  implements LibSequenceInclude {
 			}
 		}
 		
-		return senders;
+		if (inverseSearch) {
+			Set<CommandSender> inverseSenders = new HashSet<>();
+			for (Player player : runningSequence.getPlugin().getServer().getOnlinePlayers()) {
+				if (!senders.contains(player)) {
+					inverseSenders.add(player);
+				}
+			}
+			return inverseSenders;
+		} else {
+			return senders;
+		}
 	}
 
 }

@@ -31,7 +31,7 @@ public class LibSequenceConfigManager {
 	// Calling section.verifyAccess(config) is secure because this method is final 
 	protected final LibSequenceConfigSection findSection(LibSequenceCallback callback) {
 		for (LibSequenceConfigSection section : sections) {
-			if (section.hasAccess(callback)) {
+			if (section.isOwner(callback)) {
 				return section;
 			}
 		}
@@ -98,10 +98,21 @@ public class LibSequenceConfigManager {
 		sections.add(newSection);
 	}
 	
+	
+	// Normally a section is automatically created when you  first call loadSection.
+	// But in some circumstances you need a section even if load fails or before load.
+	// So you have the option to make a "dummy" section.
+	public void preregisterSection(LibSequenceCallback callback) {
+		if (findSection(callback) != null) {
+			return;
+		}
+		sections.add(new LibSequenceConfigSection(callback, actionValidator));
+	}
+	
 
 	// Removes a complete section including all of their sequences
 	// This is a admin function so you must authenticate yourself by giving me the callback object 
-	public void removeSection(LibSequenceCallback callback) throws LibSequenceConfigException {
+	public void unregisterSection(LibSequenceCallback callback) throws LibSequenceConfigException {
 		LibSequenceConfigSection sectionOld = findSection(callback);
 		if (sectionOld==null) {
 			throw new LibSequenceConfigException(LSCERR_SECTION_NOT_FOUND, null);

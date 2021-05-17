@@ -2,28 +2,19 @@ package de.polarwolf.libsequence.commands;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import de.polarwolf.libsequence.api.LibSequenceController;
-import de.polarwolf.libsequence.config.LibSequenceConfigException;
 import de.polarwolf.libsequence.main.Main;
-import de.polarwolf.libsequence.runnings.LibSequenceRunException;
-import de.polarwolf.libsequence.runnings.LibSequenceRunOptions;
-import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
-
 import static de.polarwolf.libsequence.commands.LibSequenceCommandMessages.*;
 
 public class LibSequenceCommand implements CommandExecutor {
 
 	private final Main main;
 	private final LibSequenceController controller;
-	
-	public static final String MSG_ERROR = "ERROR";
 	
 	public LibSequenceCommand(Main main, LibSequenceController controller) {
 		this.main = main;
@@ -45,10 +36,6 @@ public class LibSequenceCommand implements CommandExecutor {
 		sender.sendMessage(messageText);
 	}
 	
-	protected void printError(CommandSender sender, String errorText) {
-		sender.sendMessage(MSG_ERROR + " "  + errorText);
-	}
-
 	protected boolean checkNrOfArguments1 (CommandSender sender, int argLength) {
 		if (argLength > 1) {
 			printMessage (sender, MSG_TOO_MANY_PARAMETERS, null);
@@ -84,12 +71,7 @@ public class LibSequenceCommand implements CommandExecutor {
 	}
 	
 	protected List<String> listRunningSequences() {
-		Set<LibSequenceRunningSequence> sequences=controller.findRunningSequences();
-		ArrayList<String> sequenceNames = new ArrayList<>();
-		for (LibSequenceRunningSequence sequence : sequences) {
-			sequenceNames.add(sequence.getName());
-		}
-		return sequenceNames;
+		return controller.getRunningSequenceNames();
 	}
 
 	protected boolean hasCommandPermission(CommandSender sender, String cmd) {
@@ -97,7 +79,7 @@ public class LibSequenceCommand implements CommandExecutor {
 	}
 	
 	protected boolean hasSequencePermission(CommandSender sender, String sequenceName) {
-		return sender.hasPermission("libsequence.sequence."+sequenceName);			
+		return controller.hasPermission(sender, sequenceName);			
 	}
 
 	protected List<String> filterCommands(CommandSender sender, List<String> rawCommands) {
@@ -134,21 +116,18 @@ public class LibSequenceCommand implements CommandExecutor {
 			return;
 		}
 		String sequenceName=args[1];
+		if (!controller.hasSequence(sequenceName)) {
+			printMessage(sender, MSG_UNKNOWN_SEQUENCE, null);			
+		}
 		if (!hasSequencePermission(sender, sequenceName)) {
 			printMessage(sender, MSG_NO_SEQUENCE_PERMISSION, null);
 			return;
 		}
-		LibSequenceRunOptions runOptions = new LibSequenceRunOptions();
-		runOptions.setInitiator(sender);
-		try {
-			controller.execute(sequenceName, runOptions);
+		String result = controller.execute(sequenceName, sender);
+		if (result.equals(LibSequenceController.OK)) {
 			printMessage(sender, MSG_SEQUENCE_STARTED, null);
-		} catch (LibSequenceRunException e) {
-			printError(sender, e.getTitle());
-			main.getLogger().warning(e.getMessageCascade());
-			if (e.hasJavaException()) {
-				e.printStackTrace();
-			}
+		} else {
+			printMessage(sender, MSG_GENERAL_ERROR, result);
 		}
 	}
 
@@ -162,11 +141,11 @@ public class LibSequenceCommand implements CommandExecutor {
 			return;
 		}
 		int i =	controller.cancel(sequenceName);
-		if (i == 0) {
+		if (i > 0) {
+			printMessage(sender, MSG_SEQUENCE_CANCELLED, null);
+		} else {
 			printMessage(sender, MSG_NOT_RUNNING, null);
-			return;
 		}
-		printMessage(sender, MSG_SEQUENCE_CANCELLED, null);
 	}
 
 	protected void cmdList(CommandSender sender, String[] args) {
@@ -197,15 +176,11 @@ public class LibSequenceCommand implements CommandExecutor {
 		if (!checkNrOfArguments1(sender, args.length)) {
 			return;
 		}
-		try {
-			controller.reload();
+		String result = controller.reload();
+		if (result.equals(LibSequenceController.OK)) {
 			printMessage(sender, MSG_RELOAD, null);
-		} catch (LibSequenceConfigException e) {
-			printError(sender, e.getTitle());
-			main.getLogger().warning(e.getMessageCascade());
-			if (e.hasJavaException()) {
-				e.printStackTrace();
-			}
+		} else {
+			printMessage(sender, MSG_GENERAL_ERROR, result);
 		}
 	}
 

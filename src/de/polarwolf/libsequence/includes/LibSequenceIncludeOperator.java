@@ -17,11 +17,15 @@ public class LibSequenceIncludeOperator  implements LibSequenceInclude {
 	@Override
 	public Set<CommandSender> performInclude(String includeName, String valueText, boolean inverseSearch, LibSequenceRunningSequence runningSequence) throws LibSequenceException {
 		valueText = runningSequence.resolvePlaceholder(valueText);
-
 		Set<CommandSender> senders = new HashSet<>();
+
+		boolean isCondition = runningSequence.resolveCondition(valueText);
+		if (!(isCondition  ^ inverseSearch)) {
+			return senders;
+		}
+
 		for (Player player : runningSequence.getPlugin().getServer().getOnlinePlayers()) {
-			boolean isOP = player.isOp() || player.hasPermission(AUTOOP);
-			if (isOP ^ inverseSearch) {
+			if (player.isOp() || player.hasPermission(AUTOOP)) {
 				senders.add(player);
 			}
 		}

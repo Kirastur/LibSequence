@@ -86,7 +86,7 @@ public class LibSequenceConfigSequence {
 	
 
 	// This method is final, so no one can override this to steal a foreign callback-object
-	public final boolean hasAccess(LibSequenceCallback callbackToCheck) {
+	public final boolean isOwner(LibSequenceCallback callbackToCheck) {
 		return callbackToCheck==callback;
 	}
 	
@@ -95,7 +95,7 @@ public class LibSequenceConfigSequence {
 	// You can get it only if you are the owner of the sequence
 	// Only the owner knows the callback-object, so we use this as authentication method 
 	public String getSecurityToken (LibSequenceCallback callbackAsAuthentication) throws LibSequenceConfigException {
-		if (!hasAccess(callbackAsAuthentication)) {
+		if (!isOwner(callbackAsAuthentication)) {
 			throw new LibSequenceConfigException(getSequenceName(), LSCERR_NOT_AUTHORIZED, null);
 		}
 		return securityToken;
@@ -103,7 +103,7 @@ public class LibSequenceConfigSequence {
 	
 
 	public final void recreateSecurityToken(LibSequenceCallback callbackAsAuthentication) throws LibSequenceConfigException {
-		if (!hasAccess(callbackAsAuthentication)) {
+		if (!isOwner(callbackAsAuthentication)) {
 			throw new LibSequenceConfigException(getSequenceName(), LSCERR_NOT_AUTHORIZED, null);
 		}		
 		securityToken=UUID.randomUUID().toString();

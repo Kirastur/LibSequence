@@ -110,11 +110,18 @@ public class LibSequenceRunManager {
 	}
 	
 
+	// Create the RunningCequence
+	// You can overwrite this if you have a derived object
+	protected LibSequenceRunningSequence createRunningSequence(LibSequenceCallback runnerCallback, LibSequenceConfigSequence configSequence, LibSequenceRunOptions runOptions ) {
+		return new LibSequenceRunningSequence(runnerCallback, this, configSequence, runOptions);
+	}
+
+
 	// Start a sequence
 	// For authorization you must provide the authorization-token
 	// The new RunningSequence-Object is included in the Result-Object
 	// We take care that the runOption object always exists
-	public LibSequenceRunningSequence execute(LibSequenceCallback callback, LibSequenceConfigSequence configSequence, String securityToken, LibSequenceRunOptions runOptions) throws LibSequenceRunException {
+	public LibSequenceRunningSequence execute(LibSequenceCallback runnerCallback, LibSequenceConfigSequence configSequence, String securityToken, LibSequenceRunOptions runOptions) throws LibSequenceRunException {
 
 		String sequenceName = configSequence.getSequenceName();
 		
@@ -150,7 +157,7 @@ public class LibSequenceRunManager {
 			chainManager.resolveChain(runOptions);
 
 			// Finally create the runningSequence-object
-			return new LibSequenceRunningSequence(callback, this, configSequence, runOptions);
+			return createRunningSequence(runnerCallback, configSequence, runOptions);
 
 		} catch (LibSequenceException e) {
 			throw new LibSequenceRunException(sequenceName, 0, e);
@@ -173,14 +180,14 @@ public class LibSequenceRunManager {
 	// Cancel all running sequences with a given name
 	// This is an Admin-Function, so you will net to provide the callback-object for verification
 	// A cancel can remove the sequence from the list, so we must use an iterator here
-	public int cancelByName (LibSequenceCallback callback, String sequenceName) {
+	public int cancelByName (LibSequenceCallback runnerCallback, String sequenceName) {
 		int nrOfSequencesCancelled = 0;
 
 		Iterator<LibSequenceRunningSequence> iter = sequences.iterator();
 		while (iter.hasNext()) {
 			LibSequenceRunningSequence runningSequence = iter.next();
 			if ((runningSequence.getName().equals(sequenceName)) && 
-				(runningSequence.hasAccess(callback)) &&
+				(runningSequence.isRunner(runnerCallback)) &&
 				(!runningSequence.isFinished())) {
 				runningSequence.cancel();
 				nrOfSequencesCancelled = nrOfSequencesCancelled +1;
@@ -191,10 +198,10 @@ public class LibSequenceRunManager {
 	}
 	
 
-	public Set<LibSequenceRunningSequence> findRunningSequences(LibSequenceCallback callback) {
+	public Set<LibSequenceRunningSequence> findRunningSequences(LibSequenceCallback runnerCallback) {
 		HashSet<LibSequenceRunningSequence> result = new HashSet<>();
 		for (LibSequenceRunningSequence sequence: sequences) {
-			if ((sequence.hasAccess(callback)) && (!sequence.isFinished())) {
+			if ((sequence.isRunner(runnerCallback)) && (!sequence.isFinished())) {
 				result.add(sequence);
 			}
 		}
@@ -202,6 +209,17 @@ public class LibSequenceRunManager {
 	}
 	
 
+	public Set<LibSequenceRunningSequence> sneakRunningSequencesOwnedByMe(LibSequenceCallback ownerCallback) {
+		HashSet<LibSequenceRunningSequence> result = new HashSet<>();
+		for (LibSequenceRunningSequence sequence: sequences) {
+			if ((sequence.isOwner(ownerCallback)) && (!sequence.isFinished())) {
+				result.add(sequence);
+			}
+		}
+		return result;
+	}
+		
+	
 	protected void onInit(LibSequenceRunningSequence runningSequence) {
 		sequences.add(runningSequence);
 		actionManager.onInit(runningSequence);

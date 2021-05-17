@@ -1,6 +1,6 @@
 name: LibSequence
 description: Run a set of actions after time. Extendable scripting language. For Standalone and plugin-integration.
-version: 1.7
+version: 1.8
 authors: [Kirastur]
 website: https://www.spigotmc.org/resources/libsequence.90664
 
@@ -13,7 +13,8 @@ commands:
   libsequence:
     description: Manage sequences
     permission: libsequence.command
-    usage: "Query a list of valid subcommands by using: /libsequence help"
+    usage: "Query a list of valid subcommands by using: /<command> help"
+    aliases: [sequence]
 
 permissions:
   libsequence.command.*:
