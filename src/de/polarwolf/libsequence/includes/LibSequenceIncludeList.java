@@ -14,7 +14,7 @@ public class LibSequenceIncludeList  implements LibSequenceInclude {
 	
 	@Override
 	public Set<CommandSender> performInclude(String includeName, String valueText, boolean inverseSearch, LibSequenceRunningSequence runningSequence) throws LibSequenceException {
-		valueText = runningSequence.resolvePlaceholder(valueText);
+		valueText = runningSequence.resolvePlaceholder(includeName, valueText);
 
 		// an empty list is not an error, it just means nothing
 		Set<CommandSender> senders = new HashSet<>();

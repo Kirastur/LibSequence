@@ -47,10 +47,9 @@ public class LibSequenceActionCommand extends LibSequenceActionGeneric {
 
 	@Override
 	public void execute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) throws LibSequenceException {
-		String command = configStep.findValue(KEYNAME_COMMAND);
+		String command = sequence.findValueLocalizedAndResolvePlaceholder(configStep, KEYNAME_COMMAND, null);
     	String senderType = configStep.findValue(KEYNAME_SENDER);
     	
-    	command = sequence.resolvePlaceholder(command);
     	if (command.isEmpty()) {
     		throw new LibSequenceActionException(configStep.findActionName(), LSAERR_USER_DEFINED_ERROR, USERERROR_NO_COMMAND_GIVEN);
     	}

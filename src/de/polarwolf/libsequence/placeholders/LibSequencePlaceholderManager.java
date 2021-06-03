@@ -33,5 +33,19 @@ public class LibSequencePlaceholderManager {
 
 		return messageText;
 	}
+	
+	public boolean containsPlaceholder(String messageText) {
+		if (messageText == null) {
+			return false;
+		}
+		String[] messageWords = messageText.split(" ");
+		for (int i=0; i < messageWords.length; i++) {
+			String word = messageWords[i];
+			if (word.matches(".*%.*%.*")) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 }

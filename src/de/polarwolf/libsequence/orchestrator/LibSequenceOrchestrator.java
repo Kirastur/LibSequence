@@ -21,6 +21,7 @@ import de.polarwolf.libsequence.checks.LibSequenceCheckOperator;
 import de.polarwolf.libsequence.checks.LibSequenceCheckPermission;
 import de.polarwolf.libsequence.checks.LibSequenceCheckRegion;
 import de.polarwolf.libsequence.checks.LibSequenceCheckSendertype;
+import de.polarwolf.libsequence.checks.LibSequenceCheckWorld;
 import de.polarwolf.libsequence.conditions.LibSequenceConditionBoolean;
 import de.polarwolf.libsequence.conditions.LibSequenceConditionManager;
 import de.polarwolf.libsequence.conditions.LibSequenceConditionNumeric;
@@ -36,6 +37,7 @@ import de.polarwolf.libsequence.includes.LibSequenceIncludeManager;
 import de.polarwolf.libsequence.includes.LibSequenceIncludeOperator;
 import de.polarwolf.libsequence.includes.LibSequenceIncludePermission;
 import de.polarwolf.libsequence.includes.LibSequenceIncludeRegion;
+import de.polarwolf.libsequence.includes.LibSequenceIncludeWorld;
 import de.polarwolf.libsequence.integrations.LibSequenceIntegrationManager;
 import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderAPI;
 import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderInternal;
@@ -44,6 +46,8 @@ import de.polarwolf.libsequence.runnings.LibSequenceRunManager;
 import de.polarwolf.libsequence.syntax.LibSequenceSyntaxManager;
 
 public class LibSequenceOrchestrator {
+	
+	public static final int DEFAULT_MAX_RUNNING_SEQUENCES = 20;
 
 	protected final LibSequenceIntegrationManager integrationManager;
 	protected final LibSequencePlaceholderManager placeholderManager;
@@ -55,12 +59,20 @@ public class LibSequenceOrchestrator {
 	protected final LibSequenceConfigManager configManager;
 	protected final LibSequenceChainManager chainManager;
 	protected final LibSequenceRunManager runManager;
+	protected final int maxCurrentSequences;
 	
 
 	public LibSequenceOrchestrator(Plugin plugin, LibSequenceStartOptions startOptions) throws LibSequenceException {
 		if (startOptions == null) {
 			startOptions = new LibSequenceStartOptions();
 		}
+		
+		int optionsMaxCurrentSequences = startOptions.getMaxRunningSequences();
+		if (optionsMaxCurrentSequences < 1) {
+			optionsMaxCurrentSequences = DEFAULT_MAX_RUNNING_SEQUENCES;
+		}			
+		maxCurrentSequences = optionsMaxCurrentSequences;
+		
 		integrationManager = createIntegrationManager(plugin);
 		placeholderManager = createPlaceholderManager();
 		conditionManager = createConditionManager();
@@ -79,6 +91,9 @@ public class LibSequenceOrchestrator {
 		registerPredefinedChains(plugin, startOptions.getOption(LibSequenceStartOptions.OPTION_ENABLE_CHAIN_EVENTS));
 	}
 	
+	public int getMaxCurrentSequences() {
+		return maxCurrentSequences;
+	}
 
 	// Getters
 	public LibSequenceIntegrationManager getIntegrationManager() {
@@ -188,6 +203,7 @@ public class LibSequenceOrchestrator {
 		}
 		getCheckManager().registerCheck("check_condition", new LibSequenceCheckCondition());
 		getCheckManager().registerCheck("check_list", new LibSequenceCheckList());
+		getCheckManager().registerCheck("check_world", new LibSequenceCheckWorld());
 	}
 	
 	protected void registerPredefinedIncludes() throws LibSequenceIncludeException {
@@ -200,6 +216,7 @@ public class LibSequenceOrchestrator {
 		}
 		getIncludeManager().registerInclude("include_condition", new LibSequenceIncludeCondition(getPlaceholderManager()));
 		getIncludeManager().registerInclude("include_list", new LibSequenceIncludeList());
+		getIncludeManager().registerInclude("include_world", new LibSequenceIncludeWorld());
 		getIncludeManager().registerInclude("include_all", new LibSequenceIncludeAll());
 	}
 	

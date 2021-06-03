@@ -7,7 +7,7 @@ public class LibSequenceCheckCondition implements LibSequenceCheck {
 
 	@Override
 	public String performCheck (String checkName, String valueText, LibSequenceRunningSequence runningSequence) throws LibSequenceException {
-		valueText = runningSequence.resolvePlaceholder(valueText);
+		valueText = runningSequence.resolvePlaceholder(checkName, valueText);
 		if (runningSequence.resolveCondition(valueText)) {
 			return "";
 		} else {

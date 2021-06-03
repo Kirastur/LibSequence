@@ -10,8 +10,9 @@ public enum LibSequenceCommandMessages {
 	MSG_NO_SEQUENCE_PERMISSION ("Sorry, you don't have the right to access this sequence"),
 	MSG_TOO_MANY_PARAMETERS ("Too many parameters"),
 	MSG_NOT_RUNNING ("There are no running sequences of this type"),
-	MSG_OPTION_FORBIDDEN ("You have no permission on any option"),
-	MSG_SEQUENCE_FORBIDDEN ("You have no right on any sequence"),
+	MSG_ALL_OPTION_FORBIDDEN ("You have no permission on any option"),
+	MSG_ALL_SEQUENCE_FORBIDDEN ("You have no right on any sequence"),
+	MSG_EMPTY ("(Empty)"),
 	MSG_GENERAL_ERROR ("Error: "),
 	
 	MSG_SEQUENCE_STARTED ("Sequence started"),

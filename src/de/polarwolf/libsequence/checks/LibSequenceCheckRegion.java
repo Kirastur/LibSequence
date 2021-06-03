@@ -19,7 +19,7 @@ public class LibSequenceCheckRegion implements LibSequenceCheck {
 
 	@Override
 	public String performCheck (String checkName, String valueText, LibSequenceRunningSequence runningSequence) throws LibSequenceException {
-		valueText = runningSequence.resolvePlaceholder(valueText);
+		valueText = runningSequence.resolvePlaceholder(checkName, valueText);
 		if (valueText.isEmpty()) {
 			throw new LibSequenceCheckException(checkName, LSKERR_VALUE_MISSING, null);
 		}
@@ -29,7 +29,6 @@ public class LibSequenceCheckRegion implements LibSequenceCheck {
 			throw new LibSequenceCheckException(checkName, LSKERR_NO_INITIATOR, null);			
 		}
 		if (!(initiator instanceof Player)) {
-			// ToDo: Initiator Class Name
 			throw new LibSequenceCheckException(checkName, LSKERR_NOT_A_PLAYER, initiator.getName());			
 		}
 		Player player = (Player)initiator;

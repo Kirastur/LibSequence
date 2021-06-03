@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
@@ -31,18 +30,11 @@ public class LibSequenceActionNotify extends LibSequenceActionGeneric {
 	@Override
 	public void execute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) throws LibSequenceException {
 
-		Set<CommandSender> senders  = sequence.performIncludes(configStep);
+		Set<CommandSender> targets  = sequence.performIncludes(configStep);
 		
-		for (CommandSender sender : senders) {
-			String messageText = "";
-			if (sender instanceof Player) {
-				Player player = (Player)sender;
-				messageText = configStep.findValueLocalized(KEYNAME_MESSAGE, player.getLocale());
-			} else { 
-				messageText = configStep.findValue(KEYNAME_MESSAGE);
-			}
-			messageText = sequence.resolvePlaceholder(messageText);
-			sender.sendMessage(messageText);
+		for (CommandSender target : targets) {
+			String messageText = sequence.findValueLocalizedAndResolvePlaceholder(configStep, KEYNAME_MESSAGE, target);
+			target.sendMessage(messageText);
 		}
 	}
 

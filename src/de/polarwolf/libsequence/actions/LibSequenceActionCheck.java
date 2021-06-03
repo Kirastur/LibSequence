@@ -4,8 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
@@ -37,17 +35,9 @@ public class LibSequenceActionCheck  extends LibSequenceActionGeneric {
 		try {
 			if (!sequence.performChecks(configStep)) {
 
-				String sDenyMessage;
 				CommandSender initiator = sequence.getRunOptions().getInitiator();
-				if (initiator instanceof Player) {
-					Player player = (Player)initiator;
-					sDenyMessage = configStep.findValueLocalized(KEYNAME_DENYMESSAGE, player.getLocale());
-				} else { 
-					sDenyMessage = configStep.findValue(KEYNAME_DENYMESSAGE);
-				}
-				sDenyMessage = sequence.resolvePlaceholder(sDenyMessage);
-			
 				if (initiator != null) {
+					String sDenyMessage = sequence.findValueLocalizedAndResolvePlaceholder(configStep, KEYNAME_DENYMESSAGE, initiator);
 					initiator.sendMessage(sDenyMessage);
 				}
 			

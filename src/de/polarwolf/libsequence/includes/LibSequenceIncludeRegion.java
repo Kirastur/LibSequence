@@ -24,7 +24,7 @@ public class LibSequenceIncludeRegion  implements LibSequenceInclude {
 
 	@Override
 	public Set<CommandSender> performInclude(String includeName, String valueText, boolean inverseSearch, LibSequenceRunningSequence runningSequence) throws LibSequenceException {
-		valueText = runningSequence.resolvePlaceholder(valueText);
+		valueText = runningSequence.resolvePlaceholder(includeName, valueText);
 		if (valueText.isEmpty()) {
 			throw new LibSequenceIncludeException(includeName, LSIERR_VALUE_MISSING, null);
 		}

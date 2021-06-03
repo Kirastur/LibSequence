@@ -31,11 +31,8 @@ public class LibSequenceActionBroadcast extends LibSequenceActionGeneric {
 
 	@Override
 	public void execute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) throws LibSequenceException {
-		String messageText = configStep.findValue(KEYNAME_MESSAGE);
-		messageText = sequence.resolvePlaceholder(messageText);
-		
-		String permission = configStep.findValue(KEYNAME_PERMISSION);
-		permission = sequence.resolvePlaceholder(permission);
+		String messageText = sequence.findValueLocalizedAndResolvePlaceholder(configStep, KEYNAME_MESSAGE, null);
+		String permission = sequence.findValueLocalizedAndResolvePlaceholder(configStep, KEYNAME_PERMISSION, null);
 		
 		if ((permission != null) && (!permission.isEmpty())) {
 			sequence.getPlugin().getServer().broadcast(messageText, permission);			

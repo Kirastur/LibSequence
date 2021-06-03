@@ -32,8 +32,6 @@ import static de.polarwolf.libsequence.runnings.LibSequenceRunErrors.*;
 
 public class LibSequenceRunManager {
 	
-	public static final int MAX_RUNNING_SEQUENCES = 20;
-
 	// To make a clean object destroy, we must avoid circular references.
 	// Since the Orchestrator has a link to the RunManager-object
 	// the RunManager is not allowed to store the Orchestrator itself.
@@ -44,6 +42,7 @@ public class LibSequenceRunManager {
 	protected final LibSequenceIncludeManager includeManager;
 	protected final LibSequenceActionManager actionManager;
 	protected final LibSequenceChainManager chainManager;
+	protected final int maxCurrentSequences;
 	
 	
 	protected final Set<LibSequenceRunningSequence> sequences = new HashSet<>();
@@ -56,11 +55,12 @@ public class LibSequenceRunManager {
 		this.includeManager = orchestrator.getIncludeManager();
 		this.actionManager = orchestrator.getActionManager();
 		this.chainManager = orchestrator.getChainManager();
+		this.maxCurrentSequences = orchestrator.getMaxCurrentSequences();
 	}
 	
 
-	public int getMaxRunningSequences() {
-		return MAX_RUNNING_SEQUENCES;
+	public int getMaxCurrentSequences() {
+		return maxCurrentSequences;
 	}
 	
 
@@ -89,6 +89,10 @@ public class LibSequenceRunManager {
 	// PlaceholderManager takes care if messageTest is null
 	public String resolvePlaceholder(String messageText, LibSequenceRunOptions runOptions) throws LibSequencePlaceholderException {
 		return placeholderManager.resolvePlaceholder(messageText, runOptions);
+	}
+	
+	public boolean containsPlaceholder(String messageText) {
+		return placeholderManager.containsPlaceholder(messageText);
 	}
 		
 
@@ -131,7 +135,7 @@ public class LibSequenceRunManager {
 		}
 
 		// Is the number of maximal currently running sequences reached?
-		if (getNumberOfRunningSequences() > getMaxRunningSequences()) {
+		if (getNumberOfRunningSequences() >= getMaxCurrentSequences()) {
 			throw new LibSequenceRunException(sequenceName, 0, LSRERR_TOO_MANY, null);
 		}
 

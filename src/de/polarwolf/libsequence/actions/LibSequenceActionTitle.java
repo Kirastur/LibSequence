@@ -95,16 +95,13 @@ public class LibSequenceActionTitle extends LibSequenceActionGeneric {
 			iFadeout = Integer.parseUnsignedInt(sFadeout);
 		}
 		
-		Set<CommandSender> senders = sequence.performIncludes(configStep);
+		Set<CommandSender> targets = sequence.performIncludes(configStep);
 		
-		for (CommandSender sender : senders) {
-			if (sender instanceof Player) {
-				Player player = (Player)sender;
-				String sTitle = configStep.findValueLocalized(KEYNAME_TITLE, player.getLocale());
-				sTitle = sequence.resolvePlaceholder(sTitle);
-				
-				String sSubtitle = configStep.findValueLocalized(KEYNAME_SUBTITLE, player.getLocale());
-				sSubtitle = sequence.resolvePlaceholder(sSubtitle);
+		for (CommandSender target : targets) {
+			if (target instanceof Player) {
+				Player player = (Player)target;
+				String sTitle = sequence.findValueLocalizedAndResolvePlaceholder(configStep, KEYNAME_TITLE, target);
+				String sSubtitle = sequence.findValueLocalizedAndResolvePlaceholder(configStep, KEYNAME_SUBTITLE, target);
 				player.sendTitle(sTitle, sSubtitle, iFadein, iStay, iFadeout);
 				}
 			}

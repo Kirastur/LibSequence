@@ -1,16 +1,16 @@
 # - There are more possible ways to start and stop sequences
-# -   1. Use minecraft commands
+# -   1. Use minecraft commands ("/sequence")
 # -   2. Use API to control
 # -       a) Local sequenes defined in LibSequence's config.yml
 # -       b) Sequences published by other plugins in the Directory
 # -       c) Your own squences using the Shared Sequencer   
 # -   3. Use private sequencers (java-objects)
 # -
-# - Furthermore you can register you own actions, checls, includes etc.
+# - Furthermore you can register you own actions, checks, includes etc.
 # - 
 # - If this is not enough customizing for you,
-# -   you can extend the the function of the sequencer
-# -   e.g. enhance the sequence syntax by extending the java config objects
+# -   you can extend the the functionality of the sequencer
+# -   by inheriting the java config objects
 # -
 # -
 # - Please see our Github Wiki for Documentation
@@ -39,7 +39,7 @@ startup:
    # -   specific sequence to be allowed to start them.
    # - 
    # - If set to false, the following commands are disabled:
-   # -     sequence
+   # -     /sequence, /libseqence
    # -
    # - Even if false, sequences can be started by API (if API is enabled).
    enableCommands: true
@@ -53,23 +53,32 @@ startup:
    # -   the complete shared scheduler is not loaded anyway,
    # -   so only private sequencers with java-objects are possible.
   
-   # - Simple High-Level API to startd predefined sequences with small effort
+   # - ControllerAPI
+   # -   Simple High-Level API to startd predefined sequences with small effort
    enableControllerAPI: true
    
-   # - Register your own sequences in the public direcoty
-   # - and start sequences published there from other plugins
+   # - DirectoryAPI
+   # -   Register your own sequences in the public direcoty
+   # -   and start sequences published there from other plugins
    enableDirectoryAPI: true
    
-   # - Use the Shared Sequencer to access all features LibSequence offers.
-   # - The Shared Sequencer shares custom actions, checks, includes etc. between all
-   # -   plugins using the SequencerAPI. 
+   # - SequencerAPI
+   # -   Use the Shared Sequencer to access all features LibSequence offers.
+   # -   The Shared Sequencer shares custom actions, checks, includes etc. between all
+   # -     plugins using the SequencerAPI. 
    enableSequencerAPI: true
 
    # - The LibSequencer is not designed to prohibit the use of private sequencers,
    # -   so there is no config option to prevent this.
+   
+   # - maxCurrentSequences
+   #
+   # - Set the maximal numver of currently running sequences
+   # - The optimal value depends on your server configuration
+   maxCurrentSequences: 20
 
 
-# Limit the fuctionallity of the orchestrator (SequencerAPI)
+# Limit the fuctionality of the orchestrator (SequencerAPI)
 #
 # - Here cou can disable specitic features
 # - for security reason or if you want to get more performance       
@@ -126,6 +135,7 @@ controller:
 # OK, now let's define the sequences. Per default, only a "demo" sequence is here
 #
 # - You may optionally quote the Strings with "" if the parser has any problems
+#
 # - Sequence names are case-sensitive
 #
 sequences:
@@ -148,8 +158,8 @@ sequences:
 
 # Define translation of messages
 # 
-# - The messages here are only used for the /sequence command
-# - they do not affect ControllerAPI or SequencerAPI
+# - The messages here are only used for the /sequence command.
+# - They do not affect ControllerAPI or SequencerAPI
 #
 # - If no translation is defied, the default english messages are used 
 messages:
@@ -162,8 +172,9 @@ messages:
       MSG_NO_SEQUENCE_PERMISSION: "Du hast keine Berechtigung für diese Sequence"
       MSG_TOO_MANY_PARAMETERS: "Zu viele Parameter"
       MSG_NOT_RUNNING: "Keine laufenden Sequences gefunden"
-      MSG_OPTION_FORBIDDEN: "Du hast auf keine Optionen hier Rechte"
-      MSG_SEQUENCE_FORBIDDEN: "Du hast keinen Zugriff auf Sequences"
+      MSG_ALL_OPTION_FORBIDDEN: "Du hast auf keine Optionen hier Rechte"
+      MSG_ALL_SEQUENCE_FORBIDDEN: "Du hast keinen Zugriff auf Sequences"
+      MSG_EMPTY: "(Keine)"
       MSG_GENERAL_ERROR: "Fehler: "
 
       MSG_SEQUENCE_STARTED: "Die Sequence wurde gestartet"

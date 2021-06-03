@@ -3,6 +3,7 @@ package de.polarwolf.libsequence.runnings;
 import java.util.Set;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 // The tree is: RunManager ==> RunningSequence
@@ -95,10 +96,25 @@ public class LibSequenceRunningSequence {
 	
 	// Gateway to PlaceholderManager
 	// RunManager takes care if the messageText is null
-	public String resolvePlaceholder(String messageText) throws LibSequencePlaceholderException {
-		return runManager.resolvePlaceholder(messageText, runOptions);
+	public String resolvePlaceholder(String attributeName, String messageText) throws LibSequencePlaceholderException {
+		String resolvedText = runManager.resolvePlaceholder(messageText, runOptions);
+		if (runManager.containsPlaceholder(resolvedText)) {
+			callback.onPlaceholderWarn(this, attributeName, resolvedText);
+		}
+		return resolvedText;
 	}
-
+	
+	public String findValueLocalizedAndResolvePlaceholder (LibSequenceConfigStep configStep, String attributeName, CommandSender target) throws LibSequencePlaceholderException {
+		String messageText;
+		if (target instanceof Player) {
+			Player player = (Player)target;
+			messageText = configStep.findValueLocalized(attributeName, player.getLocale());
+		} else {
+			messageText = configStep.findValue(attributeName);
+		}
+		return resolvePlaceholder(attributeName, messageText);
+	}
+	
 	
 	// GatewayManager to ConditionManager
 	public boolean resolveCondition(String conditionText) {

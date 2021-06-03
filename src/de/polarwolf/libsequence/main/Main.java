@@ -12,6 +12,7 @@ import de.polarwolf.libsequence.callback.LibSequenceCallbackGeneric;
 import de.polarwolf.libsequence.commands.LibSequenceCommand;
 import de.polarwolf.libsequence.commands.LibSequenceCommandCompleter;
 import de.polarwolf.libsequence.exception.LibSequenceException;
+import de.polarwolf.libsequence.orchestrator.LibSequenceOrchestrator;
 import de.polarwolf.libsequence.orchestrator.LibSequenceStartOptions;
 
 public final class Main extends JavaPlugin {
@@ -28,6 +29,7 @@ public final class Main extends JavaPlugin {
 		boolean startupEnableControlAPI = getConfig().getBoolean("startup.enableControlAPI", true);
 		boolean startupEnableDirectoryAPI = getConfig().getBoolean("startup.enableDirectoryAPI", true);
 		boolean startupEnableSequencerAPI = getConfig().getBoolean("startup.enableSequencerAPI", true);
+		int startupMaxCurrentSequences = getConfig().getInt("startup.maxCurrentSequences", LibSequenceOrchestrator.DEFAULT_MAX_RUNNING_SEQUENCES);
 		
 		// read other flags from config
 		boolean orchestratorEnableCommandAction = getConfig().getBoolean("orchestrator.enableCommandAction", true);
@@ -46,6 +48,7 @@ public final class Main extends JavaPlugin {
 			LibSequenceStartOptions startOptions = new LibSequenceStartOptions();
 			startOptions.setOption(LibSequenceStartOptions.OPTION_INCLUDE_COMMAND, orchestratorEnableCommandAction);
 			startOptions.setOption(LibSequenceStartOptions.OPTION_ENABLE_CHAIN_EVENTS, orchestratorEnableChainEvents);
+			startOptions.setMaxRunningSequences(startupMaxCurrentSequences);
 			LibSequenceSequencer sequencer = new LibSequenceSequencer(this, startOptions);
 								
 			// Print Info about integrations

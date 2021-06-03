@@ -12,12 +12,11 @@ public class LibSequenceCheckList  implements LibSequenceCheck {
 
 	@Override
 	public String performCheck (String checkName, String valueText, LibSequenceRunningSequence runningSequence) throws LibSequenceException {
-		valueText = runningSequence.resolvePlaceholder(valueText);
+		valueText = runningSequence.resolvePlaceholder(checkName, valueText);
 		// Do not check for an empty valueText. It's allowed here
 
 		CommandSender initiator = runningSequence.getRunOptions().getInitiator();
 		if (!(initiator instanceof Player)) {
-			// ToDo: Initiator Name Class Resolve
 			throw new LibSequenceCheckException(checkName, LSKERR_NOT_A_PLAYER, null);
 		}
 

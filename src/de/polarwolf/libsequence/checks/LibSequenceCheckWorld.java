@@ -1,13 +1,14 @@
 package de.polarwolf.libsequence.checks;
 
+import static de.polarwolf.libsequence.checks.LibSequenceCheckErrors.*;
+
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
-import static de.polarwolf.libsequence.checks.LibSequenceCheckErrors.*;
-
-public class LibSequenceCheckPermission implements LibSequenceCheck {
+public class LibSequenceCheckWorld  implements LibSequenceCheck {
 
 	@Override
 	public String performCheck (String checkName, String valueText, LibSequenceRunningSequence runningSequence) throws LibSequenceException {
@@ -21,10 +22,15 @@ public class LibSequenceCheckPermission implements LibSequenceCheck {
 			throw new LibSequenceCheckException(checkName, LSKERR_NO_INITIATOR, null);
 		}
 
-		if (initiator.hasPermission(valueText)) {
+		if (!(initiator instanceof Player)) {
+			throw new LibSequenceCheckException(checkName, LSKERR_NOT_A_PLAYER, initiator.getName());			
+		}
+		Player player = (Player)initiator;
+		
+		if (player.getWorld().getName().equals(valueText)) {
 			return "";
 		} else {
-			return initiator.getName() + " does not have permission: " + valueText;
+			return initiator.getName() + " stays not in world: " + valueText;
 		}
 	}
 

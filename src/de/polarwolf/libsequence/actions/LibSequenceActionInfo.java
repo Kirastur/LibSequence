@@ -45,8 +45,7 @@ public class LibSequenceActionInfo extends LibSequenceActionGeneric {
 	
 	@Override
 	public void execute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) throws LibSequenceException {
-		String messageText = configStep.findValue(KEYNAME_MESSAGE);
-		messageText = sequence.resolvePlaceholder(messageText);
+		String messageText = sequence.findValueLocalizedAndResolvePlaceholder(configStep, KEYNAME_MESSAGE, null);
 
 		String levelType = configStep.findValue(KEYNAME_LEVEL);
 		

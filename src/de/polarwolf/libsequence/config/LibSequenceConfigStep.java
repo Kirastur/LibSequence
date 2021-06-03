@@ -112,7 +112,7 @@ public class LibSequenceConfigStep {
 		
 			// 2nd try: take the group language (e.g. "de")
 			if (locale.length() >= 2) {
-				String s = findValue (keyName + "_" + locale.substring(0,  2));
+				String s = findValue (keyName + "_" + locale.substring(0, 2));
 				if (s != null) {
 					return s;
 				}
