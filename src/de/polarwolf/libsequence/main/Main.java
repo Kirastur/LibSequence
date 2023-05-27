@@ -1,130 +1,125 @@
 package de.polarwolf.libsequence.main;
 
-import org.bukkit.ChatColor;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import de.polarwolf.libsequence.api.LibSequenceAPI;
 import de.polarwolf.libsequence.api.LibSequenceController;
-import de.polarwolf.libsequence.api.LibSequenceDirectory;
-import de.polarwolf.libsequence.api.LibSequenceSequencer;
-import de.polarwolf.libsequence.bstats.MetricsLite;
-import de.polarwolf.libsequence.callback.LibSequenceCallbackGeneric;
+import de.polarwolf.libsequence.api.LibSequenceProvider;
 import de.polarwolf.libsequence.commands.LibSequenceCommand;
-import de.polarwolf.libsequence.commands.LibSequenceCommandCompleter;
+import de.polarwolf.libsequence.directories.LibSequenceDirectory;
 import de.polarwolf.libsequence.exception.LibSequenceException;
+import de.polarwolf.libsequence.logger.LibSequenceLoggerDefault;
 import de.polarwolf.libsequence.orchestrator.LibSequenceOrchestrator;
+import de.polarwolf.libsequence.orchestrator.LibSequenceSequencer;
 import de.polarwolf.libsequence.orchestrator.LibSequenceStartOptions;
+import de.polarwolf.libsequence.token.LibSequenceToken;
 
+/**
+ * Minecraft plugin wrapper for the orchestrator.
+ *
+ */
 public final class Main extends JavaPlugin {
-	
-	
+
+	public static final int PLUGINID_LIBSEQUENCE = 10835;
+	public static final String COMMAND_NAME = "sequence";
+
+	protected LibSequenceToken apiToken = null;
+	protected LibSequenceAPI lsAPI = null;
+
 	@Override
 	public void onEnable() {
-		
+
 		// Copy config from .jar if it dosn't exists
 		saveDefaultConfig();
-		
+
+		// Generate our API Token
+		apiToken = new LibSequenceToken();
+
 		// Read modules-to-enable from config
 		boolean startupEnableCommands = getConfig().getBoolean("startup.enableCommands", true);
-		boolean startupEnableControlAPI = getConfig().getBoolean("startup.enableControlAPI", true);
-		boolean startupEnableDirectoryAPI = getConfig().getBoolean("startup.enableDirectoryAPI", true);
-		boolean startupEnableSequencerAPI = getConfig().getBoolean("startup.enableSequencerAPI", true);
-		int startupMaxCurrentSequences = getConfig().getInt("startup.maxCurrentSequences", LibSequenceOrchestrator.DEFAULT_MAX_RUNNING_SEQUENCES);
-		
+		boolean startupEnableAPI = getConfig().getBoolean("startup.enableAPI", true);
+		int startupMaxCurrentSequences = getConfig().getInt("startup.maxCurrentSequences",
+				LibSequenceOrchestrator.DEFAULT_MAX_RUNNING_SEQUENCES);
+
+		// Enable bStats Metrics
+		new Metrics(this, PLUGINID_LIBSEQUENCE);
+
+		// Register Command and TabCompleter
+		if (startupEnableCommands) {
+			new LibSequenceCommand(this, COMMAND_NAME);
+		}
+
+		// Check if we should start the shared sequencer
+		if (!startupEnableAPI) {
+			if (startupEnableCommands) {
+				getLogger().info("Starting of the shared sequencer is supressed and the API is not set.");
+				getLogger().info("The command cannot be used until a 3rd party plugin initializes the API.");
+			} else {
+				getLogger().info("LibSequence is in passive mode. Only private sequencers are possible");
+			}
+			return;
+		}
+
 		// read other flags from config
 		boolean orchestratorEnableCommandAction = getConfig().getBoolean("orchestrator.enableCommandAction", true);
 		boolean orchestratorEnableChainEvents = getConfig().getBoolean("orchestrator.enableChainEvents", true);
 		boolean controllerPublishLocalSequences = getConfig().getBoolean("controller.publishLocalSequences", true);
 		boolean controllerEnableDebugOutput = getConfig().getBoolean("controller.enableDebugOutput", true);
-						
-		// If no modules should be activated => goto passive mode
-		if ((!startupEnableCommands) && (!startupEnableControlAPI) && (!startupEnableDirectoryAPI) && (!startupEnableSequencerAPI)) {
-			getLogger().info("LibSequence is in passive mode. Only private sequencers are possible");
+
+		// Start Sequencer
+		LibSequenceStartOptions startOptions = new LibSequenceStartOptions(startupMaxCurrentSequences,
+				orchestratorEnableCommandAction, orchestratorEnableChainEvents);
+		LibSequenceSequencer sequencer;
+		try {
+			sequencer = new LibSequenceSequencer(this, apiToken, startOptions);
+		} catch (LibSequenceException e) {
+			e.printStackTrace();
+			getLogger().warning("Failed to start LibSequence orchestrator");
 			return;
 		}
 
-		try {
-			// Start Sequencer
-			LibSequenceStartOptions startOptions = new LibSequenceStartOptions();
-			startOptions.setOption(LibSequenceStartOptions.OPTION_INCLUDE_COMMAND, orchestratorEnableCommandAction);
-			startOptions.setOption(LibSequenceStartOptions.OPTION_ENABLE_CHAIN_EVENTS, orchestratorEnableChainEvents);
-			startOptions.setMaxRunningSequences(startupMaxCurrentSequences);
-			LibSequenceSequencer sequencer = new LibSequenceSequencer(this, startOptions);
-								
-			// Print Info about integrations
-			if (sequencer.hasIntegrationWorldguard()) {
-				getLogger().info("Link to WorldGuard established");			
-			}
-			if (sequencer.hasIntegrationPlaceholderAPI()) {
-				getLogger().info("Link to PlaceholderAPI established");			
-			}
-			
-			// Create the public directory
-			LibSequenceDirectory directory = new LibSequenceDirectory (sequencer);
-					
-			// Start Controller
-			LibSequenceCallbackGeneric callback = new LibSequenceCallbackGeneric(this);
-			callback.setEnableConsoleNotifications(controllerEnableDebugOutput);
-			callback.setEnableInitiatorNotifications(controllerEnableDebugOutput);
-			LibSequenceController controller = new LibSequenceController(directory, callback, controllerPublishLocalSequences);
-		
-
-			// Register minecraft commands
-			if (startupEnableCommands) {
-				LibSequenceCommand command = new LibSequenceCommand(this, controller);
-				getCommand("sequence").setExecutor(command);			
-				getCommand("sequence").setTabCompleter(new LibSequenceCommandCompleter(command));
-				getCommand("libsequence").setExecutor(command);			
-				getCommand("libsequence").setTabCompleter(new LibSequenceCommandCompleter(command));
-			}
-		
-			// Enable bStats Metrics
-			// Please download the bstats-code direct form their homepage
-			// or disable the following instruction
-			new MetricsLite(this, MetricsLite.PLUGINID_LIBSEQUENCE);
-
-			// Now strip down for API
-			LibSequenceSequencer apiSequencer = null;
-			LibSequenceDirectory apiDirectory = null;
-			LibSequenceController apiController = null;
-			
-			if (startupEnableSequencerAPI) {
-				apiSequencer = sequencer;
-			}
-		
-			if (startupEnableDirectoryAPI) {
-				apiDirectory = directory;
-			}
-		
-			if (startupEnableControlAPI) {
-				apiController=controller;
-			}
-		
-			// Create API and Provider
-			LibSequenceAPI lsAPI = new LibSequenceAPI(apiSequencer, apiDirectory, apiController);
-			LibSequenceProvider.setAPI(lsAPI);
-		
-			// Now initialization is done and we can print the finish message
-			getLogger().info("LibSequence has successfully started");
-			
-			// Load sequences from config
-			sequencer.loadSection(callback);
-			int nrOfSequencesLoaded = sequencer.getSequenceNames(callback).size();
-			if (nrOfSequencesLoaded > 0) {
-				getLogger().info("Number of sequences loaded: " + Integer.toString(nrOfSequencesLoaded));
-			}
-			
-			// Publish our newly loaded sequences in the public directory
-			if (controllerPublishLocalSequences) {
-				directory.syncAllMySequences(callback);
-			}
-			
-		} catch (LibSequenceException e) {
-			getServer().getConsoleSender().sendMessage(ChatColor.LIGHT_PURPLE + "ERROR " + e.getMessageCascade());
-			getLogger().info("Check your LibSequence plugin.yml or delete it, so a fresh one is created on the next server start");
-			getLogger().warning("Cannot load sequences");
+		// Print Info about integrations
+		if (sequencer.hasIntegrationWorldguard()) {
+			getLogger().info("Link to WorldGuard established");
+		}
+		if (sequencer.hasIntegrationPlaceholderAPI()) {
+			getLogger().info("Link to PlaceholderAPI established");
 		}
 
+		// Create the public directory
+		LibSequenceDirectory directory = new LibSequenceDirectory(this, apiToken, sequencer);
+
+		// Start Controller
+		LibSequenceLoggerDefault logger = new LibSequenceLoggerDefault(this);
+		logger.setEnableConsoleNotifications(controllerEnableDebugOutput);
+		logger.setEnableInitiatorNotifications(controllerEnableDebugOutput);
+		LibSequenceController controller;
+		if (controllerPublishLocalSequences) {
+			controller = new LibSequenceController(this, directory, logger);
+		} else {
+			controller = new LibSequenceController(null, directory, logger);
+		}
+
+		// Build the API
+		lsAPI = new LibSequenceAPI(apiToken, sequencer, directory, controller);
+		LibSequenceProvider.setAPI(lsAPI);
+
+		// Now initialization is done and we can print the finish message
+		getLogger().info("LibSequence has successfully started");
+
 	}
-	
+
+	@Override
+	public void onDisable() {
+		if (lsAPI != null) {
+			boolean result = lsAPI.disable(apiToken);
+			lsAPI = null;
+			if (!result) {
+				getLogger().warning("Could not shutdown orchestrator");
+			}
+		}
+		LibSequenceProvider.setAPI(null);
+	}
+
 }

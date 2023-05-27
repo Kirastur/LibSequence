@@ -3,32 +3,13 @@ package de.polarwolf.libsequence.chains;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 
-public class LibSequenceChainInteraction {
-	
-	protected final CommandSender sender;
-	protected final Block target;
-	protected final long timestamp;
-	
-
-	public LibSequenceChainInteraction(CommandSender sender, Block target) {
-		this.sender = sender;
-		this.target = target;
-		this.timestamp = System.currentTimeMillis();		
-	}
-	
-
-	public CommandSender getSender() {
-		return sender;
-	}
-
-
-	public Block getTarget() {
-		return target;
-	}
-
-
-	public long getTimestamp() {
-		return timestamp;
-	}
+/**
+ *  This stores the event when a player presses the button.
+ *  On a commandblock initiated sequence the chainresolver
+ *  uses this list to detect the nearest player (which is the one
+ *  who is then assigned as the initiator).
+ *
+ */
+public record LibSequenceChainInteraction (CommandSender sender, Block target, long timestamp) {
 
 }

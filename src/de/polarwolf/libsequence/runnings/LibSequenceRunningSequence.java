@@ -12,180 +12,231 @@ import org.bukkit.plugin.Plugin;
 
 import org.bukkit.scheduler.BukkitTask;
 
-import de.polarwolf.libsequence.callback.LibSequenceCallback;
 import de.polarwolf.libsequence.checks.LibSequenceCheckException;
 import de.polarwolf.libsequence.config.LibSequenceConfigSequence;
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 import de.polarwolf.libsequence.includes.LibSequenceIncludeException;
 import de.polarwolf.libsequence.placeholders.LibSequencePlaceholderException;
+import de.polarwolf.libsequence.token.LibSequenceToken;
 
+/**
+ * Represents a sequence which is currently executed
+ *
+ */
 public class LibSequenceRunningSequence {
-	
+
 	public static final int TICKS_PER_SECOND = 20;
-	
-	protected final LibSequenceCallback callback;
+
+	protected final LibSequenceToken runnerToken;
 	protected final LibSequenceConfigSequence configSequence;
 	protected final LibSequenceRunOptions runOptions;
-	
+
 	protected final Plugin plugin;
-	
+
 	protected boolean bCancel = false;
 	protected boolean bFinish = false;
 	protected int step = 0;
 
-	protected BukkitTask currentTask = null;
-	
-	// Be careful with RunManager here
-	// Don't use section-based calls
-	// You can't rely that the sections does still exist during execution
-
 	// Not static because we must cleanup reference after sequence is done
-	// to let java destroy the sequencer-object on dispose  
-	private LibSequenceRunManager runManager;
+	// to let java destroy the manager-objects on dispose
+	protected LibSequenceRunHelper runHelper;
 
-	public LibSequenceRunningSequence(LibSequenceCallback callback, LibSequenceRunManager runManager, LibSequenceConfigSequence configSequence, LibSequenceRunOptions runOptions) {
-		this.callback=callback;
-		this.runManager=runManager;
-		this.configSequence=configSequence;
-		this.runOptions=runOptions;
+	protected BukkitTask currentTask = null;
+
+	public LibSequenceRunningSequence(Plugin plugin, LibSequenceRunManager runManager, LibSequenceToken runnerToken,
+			LibSequenceConfigSequence configSequence, LibSequenceRunOptions runOptions) {
+		this.plugin = plugin;
+		this.runHelper = runManager.acquireRunHelper(this);
+		this.runnerToken = runnerToken;
+		this.configSequence = configSequence;
+		this.runOptions = runOptions;
 		onInit();
 		currentTask = createScheduledTask(1);
-		// Bukkit runTaskLater return value is Nonnull
-		plugin = currentTask.getOwner();			
 	}
-	
 
+	/**
+	 * Flag if the sequence was cancelled
+	 */
 	public boolean isCancelled() {
 		return bCancel;
 	}
-	
 
+	/**
+	 * Flag if the sequence was finished (either successful or cancelled)
+	 */
 	public boolean isFinished() {
 		return bFinish;
 	}
-	
 
+	/**
+	 * Get the step number the execution is currently in
+	 */
 	public int getStepNr() {
 		return step;
 	}
-	
 
+	/**
+	 * Get the name of the sequence as defined in the ConfigSequence
+	 */
 	public String getName() {
 		return configSequence.getSequenceName();
 	}
-	
 
-	// RunManager takes care that the RunManager object always exist
+	/**
+	 * Gets the runOption the sequence is started with. The RunManager takes care
+	 * that the runOptions object always exist.
+	 */
+	//
 	public LibSequenceRunOptions getRunOptions() {
 		return runOptions;
 	}
-	
 
-	public Plugin getPlugin() {
+	/**
+	 * Get the plugin. Needed for scheduling the wait task.
+	 */
+	protected Plugin getPlugin() {
 		return plugin;
 	}
-	
 
-	public final boolean isOwner(LibSequenceCallback callbackToCheck) {
-		return configSequence.isOwner(callbackToCheck);
+	/**
+	 * Test if the given Token is the ownerToken of the ConfigSession
+	 */
+	public final boolean isOwner(LibSequenceToken ownerTokenToCheck) {
+		return configSequence.isOwner(ownerTokenToCheck);
 	}
 
-	public final boolean isRunner(LibSequenceCallback callbackToCheck) {
-		return callbackToCheck == callback;
+	/**
+	 * Test if the given token is the runnerToken with was set at sequence start.
+	 */
+	public final boolean isRunner(LibSequenceToken runnerTokenToCheck) {
+		return runnerToken.equals(runnerTokenToCheck);
 	}
-	
-	// Gateway to PlaceholderManager
-	// RunManager takes care if the messageText is null
+
+	// Gateway to placeholder
+	/**
+	 * forward this request to the runHelper
+	 */
 	public String resolvePlaceholder(String attributeName, String messageText) throws LibSequencePlaceholderException {
-		String resolvedText = runManager.resolvePlaceholder(messageText, runOptions);
-		if (runManager.containsPlaceholder(resolvedText)) {
-			callback.onPlaceholderWarn(this, attributeName, resolvedText);
+		String resolvedText = runHelper.resolvePlaceholder(messageText, runOptions);
+		if (runHelper.containsPlaceholder(resolvedText)) {
+			runOptions.getLogger().onPlaceholderWarn(this, attributeName, resolvedText);
 		}
 		return resolvedText;
 	}
-	
-	public String findValueLocalizedAndResolvePlaceholder (LibSequenceConfigStep configStep, String attributeName, CommandSender target) throws LibSequencePlaceholderException {
+
+	/**
+	 * forward this request to the runHelper
+	 */
+	public String resolvePlaceholderForOtherPlayer(String messageText, Player player)
+			throws LibSequencePlaceholderException {
+		return runHelper.resolvePlaceholderForOtherPlayer(messageText, runOptions, player);
+	}
+
+	/**
+	 * Resolve placeholders and respects the initiator's locale
+	 */
+	public String findValueLocalizedAndResolvePlaceholder(LibSequenceConfigStep configStep, String attributeName,
+			CommandSender target) throws LibSequencePlaceholderException {
 		String messageText;
-		if (target instanceof Player) {
-			Player player = (Player)target;
+		if (target instanceof Player player) {
 			messageText = configStep.findValueLocalized(attributeName, player.getLocale());
 		} else {
 			messageText = configStep.findValue(attributeName);
 		}
 		return resolvePlaceholder(attributeName, messageText);
 	}
-	
-	
+
 	// GatewayManager to ConditionManager
+	/**
+	 * forward this request to the runHelper
+	 */
 	public boolean resolveCondition(String conditionText) {
-		return runManager.resolveCondition(conditionText, this);
+		return runHelper.resolveCondition(conditionText, this);
 	}
 
-	
 	// Gateway to CheckManager
+	/**
+	 * forward this request to the runHelper
+	 */
 	public boolean performChecks(LibSequenceConfigStep configStep) throws LibSequenceCheckException {
-		return runManager.performChecks(this, configStep);
+		return runHelper.performChecks(configStep);
 	}
 
-	
 	// Gateway to IncludeManager
+	/**
+	 * forward this request to the runHelper
+	 */
 	public Set<CommandSender> performIncludes(LibSequenceConfigStep configStep) throws LibSequenceIncludeException {
-		return runManager.performIncludes(this, configStep);
+		return runHelper.performIncludes(configStep);
 	}
 
-	
-	// Report failed check to Callback
+	/**
+	 * Report a failed check to the logger
+	 */
 	public void onCheckFailed(String checkName, String failMessage) {
-		callback.onCheckFailed(this, checkName, failMessage);
+		runOptions.getLogger().onCheckFailed(this, checkName, failMessage);
 	}
 
-
-	// Report exception to Callback
+	/**
+	 * Report an exception to the logger
+	 */
 	protected void onExecutionError(LibSequenceRunException e) {
-		callback.onExecutionError(this, e);
+		runOptions.getLogger().onExecutionError(this, e);
 	}
 
-	
+	/**
+	 * Executes the given sequence step
+	 */
 	protected void executeStep(LibSequenceConfigStep configStep) throws LibSequenceRunException {
-		runManager.executeStep(this, configStep);
+		runHelper.executeStep(configStep);
 	}
 
-	
+	/**
+	 * Distribute the sequence-start notification
+	 */
 	protected void onInit() {
-		runManager.onInit(this);	
-		callback.debugSequenceStarted(this);
+		runHelper.onInit();
+		runOptions.getLogger().debugSequenceStarted(this);
 	}
-	
 
+	/**
+	 * Distribute the sequence-cancel notification
+	 */
 	protected void onCancel() {
-		callback.debugSequenceCancelled(this);
-		runManager.onCancel(this);	
+		runOptions.getLogger().debugSequenceCancelled(this);
+		runHelper.onCancel();
 	}
 
-
+	/**
+	 * Distribute the sequence-fihish notification
+	 */
 	protected void onFinish() {
-		callback.debugSequenceFinished(this);
-		runManager.onFinish(this);	
+		runOptions.getLogger().debugSequenceFinished(this);
+		runHelper.onFinish();
 	}
-	
 
+	/**
+	 * Start the Bukkit scheduler for the wait-step
+	 */
 	protected BukkitTask createScheduledTask(int wait) {
 		SingleStepTask task = new SingleStepTask(this);
-		return callback.scheduleTask(task, wait);
+		return task.runTaskLater(plugin, wait);
 	}
-	
 
-	// A cancel must always be possible, so no return value here
+	/**
+	 * Cancel the sequence execution. A cancel must always be possible, so no return
+	 * value here.
+	 */
 	public void cancel() {
 		if (bFinish) {
 			return;
 		}
-		bCancel= true;
-		
+		bCancel = true;
+
 		// Yes, this is useless because if the task does not exists
 		// the cancel() creates an exception which is handled by the "finally",
 		// but I don't like that way
-		if (currentTask==null) {
+		if (currentTask == null) {
 			handleEndOfSequence();
 			return;
 		}
@@ -198,11 +249,13 @@ public class LibSequenceRunningSequence {
 		}
 	}
 
-
+	/**
+	 * Handle the next sequence-step in sequence execution
+	 */
 	protected void handleNextStep() {
 
 		// Cleanup the reference to the Bukkit runTasLater object
-		currentTask=null;
+		currentTask = null;
 
 		// check if sequence is cancelled during sleep
 		if (isCancelled() || isFinished()) {
@@ -211,15 +264,15 @@ public class LibSequenceRunningSequence {
 		}
 
 		// Check if end of sequence reached
-		step = step +1;
+		step = step + 1;
 		if (step > configSequence.getSize()) {
 			handleEndOfSequence();
 			return;
 		}
-			
+
 		// Execute action
 		LibSequenceConfigStep configStep = configSequence.getStep(step);
-		callback.debugSequenceStepReached(this, configStep);
+		runOptions.getLogger().debugSequenceStepReached(this, configStep);
 		try {
 			executeStep(configStep);
 		} catch (LibSequenceRunException e) {
@@ -232,28 +285,31 @@ public class LibSequenceRunningSequence {
 			handleEndOfSequence();
 			return;
 		}
-		
+
 		// Prepare for next step
 		int wait = configStep.getWait();
-		if (wait==0) {
-			wait=1;
+		if (wait == 0) {
+			wait = 1;
 		} else {
-			wait=wait * TICKS_PER_SECOND;
+			wait = wait * TICKS_PER_SECOND;
 		}
 		currentTask = createScheduledTask(wait);
 	}
-	
 
+	/**
+	 * Cleanup the sequence after finish or cancel
+	 */
 	protected void handleEndOfSequence() {
 		if (bFinish) {
 			return;
 		}
-		bFinish=true;
+		bFinish = true;
 		if (bCancel) {
 			onCancel();
 		} else {
 			onFinish();
 		}
+		runHelper = null;
 	}
-	
+
 }

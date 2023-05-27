@@ -1,6 +1,9 @@
 package de.polarwolf.libsequence.includes;
 
-import static de.polarwolf.libsequence.includes.LibSequenceIncludeErrors.*;
+import static de.polarwolf.libsequence.includes.LibSequenceIncludeErrors.LSIERR_INCLUDE_ALREADY_EXISTS;
+import static de.polarwolf.libsequence.includes.LibSequenceIncludeErrors.LSIERR_INCLUDE_NOT_FOUND;
+import static de.polarwolf.libsequence.includes.LibSequenceIncludeErrors.LSIERR_JAVA_EXCEPTION;
+import static de.polarwolf.libsequence.includes.LibSequenceIncludeErrors.LSIERR_SYNTAX_ERROR;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,14 +14,28 @@ import org.bukkit.command.CommandSender;
 
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 import de.polarwolf.libsequence.exception.LibSequenceException;
+import de.polarwolf.libsequence.orchestrator.LibSequenceOrchestrator;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
+/**
+ * Manage the different includes
+ *
+ * @see <A href=
+ *      "https://github.com/Kirastur/LibSequence/wiki/Includes">Includes</A>
+ *      (WIKI)
+ * @see <A href=
+ *      "https://github.com/Kirastur/LibSequence/wiki/IncludeManager">Include
+ *      Manager</A> (WIKI)
+ */
 public class LibSequenceIncludeManager {
-	
+
 	public static final String INCLUDE_PREFIX = "include_";
 
 	protected Map<String, LibSequenceInclude> includeMap = new HashMap<>();
-	
+
+	public LibSequenceIncludeManager(LibSequenceOrchestrator orchestrator) {
+		// Prevent from starting the Manager without having an orchestrator
+	}
 
 	public void registerInclude(String includeName, LibSequenceInclude include) throws LibSequenceIncludeException {
 		if (hasInclude(includeName)) {
@@ -29,11 +46,10 @@ public class LibSequenceIncludeManager {
 		}
 		includeMap.put(includeName, include);
 	}
-	
+
 	public Set<String> getIncludeNames() {
 		return includeMap.keySet();
 	}
-	
 
 	public boolean isValidIncludeName(String includeName) {
 		if (includeName.length() <= INCLUDE_PREFIX.length()) {
@@ -42,44 +58,44 @@ public class LibSequenceIncludeManager {
 		return includeName.substring(0, INCLUDE_PREFIX.length()).equals(INCLUDE_PREFIX);
 	}
 
-
 	public boolean hasInclude(String includeName) {
 		return includeMap.containsKey(includeName);
 	}
-	
 
-	public LibSequenceInclude getIncludeByName (String includeName) throws LibSequenceIncludeException {
+	public LibSequenceInclude getIncludeByName(String includeName) throws LibSequenceIncludeException {
 		LibSequenceInclude include = includeMap.get(includeName);
 		if (include == null) {
-			throw new LibSequenceIncludeException(null, LSIERR_INCLUDE_NOT_FOUND, includeName);						
+			throw new LibSequenceIncludeException(null, LSIERR_INCLUDE_NOT_FOUND, includeName);
 		}
 		return include;
 	}
-	
 
 	protected boolean hasOperator(String valueText, String operatorChar) {
-		return (!valueText.isEmpty()) && (valueText.substring(0, 1).equals(operatorChar));		
+		return (!valueText.isEmpty()) && (valueText.substring(0, 1).equals(operatorChar));
 	}
-	
-	protected void singleInclude (String includeName, LibSequenceRunningSequence runningSequence, LibSequenceConfigStep configStep, Set<CommandSender> sendersInclude, Set<CommandSender> sendersExclude) throws LibSequenceIncludeException {
+
+	protected void singleInclude(String includeName, LibSequenceRunningSequence runningSequence,
+			LibSequenceConfigStep configStep, Set<CommandSender> sendersInclude, Set<CommandSender> sendersExclude)
+			throws LibSequenceIncludeException {
 		try {
 			LibSequenceInclude include = getIncludeByName(includeName);
 
 			// valueText cannot be null because key exists
-			// it is allowed for valueText to be empty, this is handled in the different includes
+			// it is allowed for valueText to be empty, this is handled in the different
+			// includes.
 			// Placeholder is also resolved in the individual includes
 			String valueText = configStep.findValue(includeName);
-			
+
 			boolean isExclude = hasOperator(valueText, "-");
 			if (isExclude) {
 				valueText = valueText.substring(1);
 			}
-			
-			boolean isInverse = hasOperator (valueText, "!");
+
+			boolean isInverse = hasOperator(valueText, "!");
 			if (isInverse) {
 				valueText = valueText.substring(1);
 			}
-			
+
 			Set<CommandSender> mySenders = include.performInclude(includeName, valueText, isInverse, runningSequence);
 			if (isExclude) {
 				sendersExclude.addAll(mySenders);
@@ -94,15 +110,16 @@ public class LibSequenceIncludeManager {
 			throw new LibSequenceIncludeException(includeName, LSIERR_JAVA_EXCEPTION, null, e);
 		}
 	}
-	
 
-	public Set<CommandSender> performIncludes(LibSequenceRunningSequence runningSequence, LibSequenceConfigStep configStep) throws LibSequenceIncludeException {
+	public Set<CommandSender> performIncludes(LibSequenceRunningSequence runningSequence,
+			LibSequenceConfigStep configStep) throws LibSequenceIncludeException {
 		Set<CommandSender> sendersInclude = new HashSet<>();
 		Set<CommandSender> sendersExclude = new HashSet<>();
 
 		for (String keyText : configStep.getAttributeKeys()) {
-			
-			// Tests if key is an include (because it could also be another action-related attribute)
+
+			// Tests if key is an include (because it could also be another action-related
+			// attribute)
 			if (isValidIncludeName(keyText)) {
 				singleInclude(keyText, runningSequence, configStep, sendersInclude, sendersExclude);
 			}
@@ -110,5 +127,5 @@ public class LibSequenceIncludeManager {
 		sendersInclude.removeAll(sendersExclude);
 		return sendersInclude;
 	}
-	
+
 }

@@ -4,43 +4,50 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.bukkit.command.CommandSender;
+
 import de.polarwolf.libsequence.config.LibSequenceConfigStep;
 import de.polarwolf.libsequence.exception.LibSequenceException;
 import de.polarwolf.libsequence.runnings.LibSequenceRunningSequence;
 
-public class LibSequenceActionCheck  extends LibSequenceActionGeneric {
-	
+/**
+ * This action checks if the sender fulfills the given rules. If not, the
+ * sequence stops at this point. You can set one ore more check-rules. If more
+ * than one rule is set, the player must fulfill all of them.
+ *
+ */
+public class LibSequenceActionCheck extends LibSequenceActionGeneric {
+
 	public static final String KEYNAME_DENYMESSAGE = "denymessage";
 
-	
-    @Override
+	@Override
 	public boolean hasCheck() {
-    	return true;
-    }
-
-    
-    @Override
-	public Set<String> getOptionalAttributes() {
-    	Set<String> myAttributes = new HashSet<>();
-    	myAttributes.add(KEYNAME_DENYMESSAGE);
-    	return myAttributes;
+		return true;
 	}
 
+	@Override
+	public Set<String> getOptionalAttributes() {
+		Set<String> myAttributes = new HashSet<>();
+		myAttributes.add(KEYNAME_DENYMESSAGE);
+		return myAttributes;
+	}
 
 	@Override
-	public void execute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep) throws LibSequenceException {
+	public void execute(LibSequenceRunningSequence sequence, LibSequenceConfigStep configStep)
+			throws LibSequenceException {
 
-		// Important: Under no circumstances a sequence can continue if the check result is undefined
+		// Important: Under no circumstances a sequence can continue if the check result
+		// is undefined
 		// Therefore on an Exception during check we must cancel the sequence
 		try {
 			if (!sequence.performChecks(configStep)) {
 
 				CommandSender initiator = sequence.getRunOptions().getInitiator();
 				if (initiator != null) {
-					String sDenyMessage = sequence.findValueLocalizedAndResolvePlaceholder(configStep, KEYNAME_DENYMESSAGE, initiator);
+					String sDenyMessage = sequence.findValueLocalizedAndResolvePlaceholder(configStep,
+							KEYNAME_DENYMESSAGE, initiator);
 					initiator.sendMessage(sDenyMessage);
 				}
-			
+
 				sequence.cancel();
 			}
 		} catch (Exception e) {

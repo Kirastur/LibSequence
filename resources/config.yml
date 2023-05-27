@@ -1,6 +1,6 @@
 # - There are more possible ways to start and stop sequences
 # -   1. Use minecraft commands ("/sequence")
-# -   2. Use API to control
+# -   2. Use API to control:
 # -       a) Local sequenes defined in LibSequence's config.yml
 # -       b) Sequences published by other plugins in the Directory
 # -       c) Your own squences using the Shared Sequencer   
@@ -38,36 +38,26 @@ startup:
    # - Player must have command permission and execute permission for the 
    # -   specific sequence to be allowed to start them.
    # - 
-   # - If set to false, the following commands are disabled:
-   # -     /sequence, /libseqence
+   # - If set to false, the following command is disabled:
+   # -     /sequence, 
    # -
    # - Even if false, sequences can be started by API (if API is enabled).
    enableCommands: true
   
    # Allow API to start and cancel sequences
    #
-   # - If sequences are started via API, no permission check is done.
-   # - if these options are disabled, sequences can only be start using commands.
+   # - If this options is disabled, the shared sequencer is not started.
+   # -
+   # - Then a 3rd party plugin must initialize the API
+   # - befor the /sequence command can be used.
+   # -
+   # - If you disable both, API and commands, you can use only
+   # - private sequencers using java-pbjects.
+   # . 
+   # - Note: If sequences are started via API, no permission check is done.
    # - 
-   # - If all APIs and commands are disabled
-   # -   the complete shared scheduler is not loaded anyway,
-   # -   so only private sequencers with java-objects are possible.
-  
-   # - ControllerAPI
-   # -   Simple High-Level API to startd predefined sequences with small effort
-   enableControllerAPI: true
+   enableAPI: true
    
-   # - DirectoryAPI
-   # -   Register your own sequences in the public direcoty
-   # -   and start sequences published there from other plugins
-   enableDirectoryAPI: true
-   
-   # - SequencerAPI
-   # -   Use the Shared Sequencer to access all features LibSequence offers.
-   # -   The Shared Sequencer shares custom actions, checks, includes etc. between all
-   # -     plugins using the SequencerAPI. 
-   enableSequencerAPI: true
-
    # - The LibSequencer is not designed to prohibit the use of private sequencers,
    # -   so there is no config option to prevent this.
    
@@ -111,7 +101,7 @@ controller:
    # Enbale Debug
    #
    # - The LibSequence Sequencer does not have any debug output
-   # - All Messages are sent to the callback-interface
+   # - All Messages are sent to the logger-interface
    #
    # - The Controller receives this messages through the callbackGeneric
    # - so he has to deal with it
@@ -125,7 +115,7 @@ controller:
    # - If you need more control about Debug, you must use
    # - you own callback-object together with SequencerAPI
    # 
-   enableDebugOutput: true
+   enableDebugOutput: false
    
    # - Register the sequences defined in the "sequences" section of
    # - LibSequence's config.yml in the public directory
@@ -174,8 +164,9 @@ messages:
       MSG_NOT_RUNNING: "Keine laufenden Sequences gefunden"
       MSG_ALL_OPTION_FORBIDDEN: "Du hast auf keine Optionen hier Rechte"
       MSG_ALL_SEQUENCE_FORBIDDEN: "Du hast keinen Zugriff auf Sequences"
+      MSG_NO_API: "Die LibSequence API ist nicht initialisiert"
       MSG_EMPTY: "(Keine)"
-      MSG_GENERAL_ERROR: "Fehler: "
+      MSG_GENERAL_ERROR: "Fehler:"
 
       MSG_SEQUENCE_STARTED: "Die Sequence wurde gestartet"
       MSG_SEQUENCE_CANCELLED: "Die Sequence wurde abgebrochen"
